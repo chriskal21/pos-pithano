@@ -6,6 +6,15 @@
 <title>SamurAI bet</title>
 <meta name="description" content="SamurAI bet: πιθανότητες και δίκαιες αποδόσεις για ποδόσφαιρο και μπάσκετ από στατιστικά μοντέλα.">
 <meta name="theme-color" content="#0A1714">
+<link rel="canonical" href="./">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SamurAI bet">
+<meta property="og:locale" content="el_GR">
+<meta property="og:title" content="SamurAI bet: πιθανότητες για ποδόσφαιρο και μπάσκετ">
+<meta property="og:description" content="Πιθανότητες και δίκαιες αποδόσεις από στατιστικό μοντέλο για Super League, Premier League, Champions League, EuroLeague, NBA και άλλα, με ανοιχτό ιστορικό επιτυχίας.">
+<meta property="og:url" content="./">
+<meta property="og:image" content="og.png">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Commissioner:wght@400;500;600;700&family=Fira+Sans+Extra+Condensed:ital,wght@0,500;0,600;0,700;1,700;1,800;1,900&display=swap">
@@ -546,6 +555,7 @@ footer .age { border-color: var(--muted); color: var(--muted); }
     <div>
       <p>Το SamurAI bet δείχνει στατιστικές εκτιμήσεις και δεν είναι συμβουλή στοιχηματισμού. Δεν συνεργάζεται με στοιχηματικές εταιρείες.</p>
       <p id="sources"></p>
+      <p><a href="protathlimata/">Προγνωστικά ανά πρωτάθλημα</a></p>
     </div>
   </div>
 </footer>
@@ -858,8 +868,13 @@ footer .age { border-color: var(--muted); color: var(--muted); }
       if (k === "all") { ic = el("span", "all-ic"); ic.innerHTML = SPORT_IC[sport]; }
       else ic = iconEl((list.find(m => m.league === k) || {}).cc || "");
       const t = el("div");
-      t.append(el("h2", null, k === "all" ? (sport === "football" ? "Όλοι οι αγώνες ποδοσφαίρου" : "Όλοι οι αγώνες μπάσκετ") : k),
-        el("p", null, k === "all" ? `${list.length} αγώνες τις επόμενες μέρες, σε ώρα Ελλάδας.` : ((META[k] || {}).note || "")));
+      const sub = el("p", null, k === "all" ? `${list.length} αγώνες τις επόμενες μέρες, σε ώρα Ελλάδας.` : ((META[k] || {}).note || ""));
+      if (k !== "all") {
+        const a = el("a", null, "Σελίδα πρωταθλήματος");
+        a.href = "protathlimata/" + k.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + ".html";
+        a.style.marginLeft = "8px"; sub.append(a);
+      }
+      t.append(el("h2", null, k === "all" ? (sport === "football" ? "Όλοι οι αγώνες ποδοσφαίρου" : "Όλοι οι αγώνες μπάσκετ") : k), sub);
       headHost.append(ic, t);
     }
     function setLeague(k) { state[sport].league = k; store.set("pp-lg-" + sport, k); chips(); head(); draw(); drawNav(); }
@@ -1121,7 +1136,7 @@ footer .age { border-color: var(--muted); color: var(--muted); }
     share.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13"/></svg>';
     share.append(document.createTextNode("Μοιράσου τον αγώνα"));
     share.addEventListener("click", async () => {
-      const url = location.href, title = `${m.home} – ${m.away}: πρόγνωση`;
+      const url = m.page ? new URL(m.page, location.href.split("#")[0]).href : location.href, title = `${m.home} – ${m.away}: πρόγνωση`;
       try { if (navigator.share) { await navigator.share({ title, url }); return; } } catch (e) { return; }
       try { await navigator.clipboard.writeText(url); share.lastChild.textContent = "Ο σύνδεσμος αντιγράφηκε"; }
       catch (e) { share.lastChild.textContent = url; }

@@ -816,11 +816,29 @@ def main() -> int:
     if len(problems) >= shown:
         print("! Απέτυχε η λήψη για όλες τις διοργανώσεις. Η σελίδα μένει όπως ήταν.")
         return 1
+    # διεύθυνση της στατικής σελίδας κάθε αγώνα (για Google και κοινοποίηση)
+    seen = set()
+    for m in matches:
+        try:
+            import static_pages
+            s = static_pages.match_slug(m)
+        except Exception:
+            s = re.sub(r"[^a-z0-9]+", "-", m["id"].lower())
+        base_s, k = s, 2
+        while s in seen:
+            s, k = f"{base_s}-{k}", k + 1
+        seen.add(s); m["page"] = f"agones/{s}.html"
     data = dict(updated=NOW.isoformat(), matches=matches, leagues=meta, problems=problems,
                 elo=update_elo(old.get("elo")))
     data_p.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")))
     if tables:
         tables_p.write_text(json.dumps(dict(updated=NOW.isoformat(), leagues=tables), ensure_ascii=False, separators=(",", ":")))
+    try:                                   # στατικές σελίδες: αν κάτι πάει στραβά, το κυρίως site δεν επηρεάζεται
+        import static_pages
+        static_pages.build(SITE, matches, history, tables, NOW)
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        print(f"  ! στατικές σελίδες: {e}")
     done = sum("result" in v for v in history["events"].values())
     print(f"✓ {len(matches)} αγώνες σε {len(meta)} διοργανώσεις · ιστορικό {len(history['events'])} ({done} με αποτέλεσμα)")
     return 0
