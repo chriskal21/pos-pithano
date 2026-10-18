@@ -298,6 +298,74 @@ table.sg td.hot { color: var(--on-amber); font-weight: 800; }
 .prose a { color: var(--amber-ink); }
 .formula { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; overflow-x: auto; white-space: nowrap; font: 600 16px/1.4 var(--display); }
 
+/* ---------- Match page ---------- */
+.match-open #stage, .match-open .cols, .match-open .subline { display: none; }
+.mview { display: grid; gap: 16px; margin-bottom: 30px; }
+.mv-top { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 14px; cursor: pointer; font: 600 15px/1 var(--display); letter-spacing: .02em; display: inline-flex; gap: 8px; align-items: center; }
+.btn:hover { border-color: var(--amber); }
+.btn svg { width: 16px; height: 16px; }
+.mv-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.mv-grid .wide { grid-column: 1 / -1; }
+.why { display: grid; gap: 8px; }
+.why ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.why li::marker { color: var(--amber); }
+.why .verdict { font: italic 800 22px/1.2 var(--display); margin: 2px 0 0; color: var(--amber-ink); }
+.why li { color: var(--ink); }
+.pills { display: inline-flex; gap: 4px; }
+.pill { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; font: 800 12px/1 var(--display); color: #fff; }
+.pill.W { background: #1F9D57; } .pill.D { background: #6E8079; } .pill.L { background: #C94A3B; }
+.flist { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.flist td { padding: 6px 4px; border-top: 1px solid var(--line); }
+.flist td.sc { font: 700 15px/1 var(--display); text-align: center; white-space: nowrap; }
+.flist td.dd { color: var(--muted); white-space: nowrap; font-size: 12.5px; }
+.flist td small { display: block; color: var(--muted); font-size: 11.5px; }
+.cmp { display: grid; gap: 10px; }
+.cmp-row { display: grid; grid-template-columns: 56px minmax(0, 1fr) 56px; gap: 10px; align-items: center; }
+.cmp-row b { font: 800 18px/1 var(--display); font-variant-numeric: tabular-nums; }
+.cmp-row b:last-child { text-align: right; }
+.cmp-mid { display: grid; gap: 4px; text-align: center; font-size: 12px; color: var(--muted); }
+.cmp-bars { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; height: 8px; }
+.cmp-bars i { display: block; height: 100%; border-radius: 3px; }
+.cmp-bars i:first-child { background: var(--amber); justify-self: end; }
+.cmp-bars i:last-child { background: var(--sky); }
+.teamhead { display: flex; justify-content: space-between; gap: 10px; font: 700 15px/1.2 var(--display); }
+.teamhead span:last-child { text-align: right; }
+.poscard { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.poscard > div { background: var(--surface-2); border-radius: 12px; padding: 12px; display: grid; gap: 2px; }
+.poscard b { font: italic 900 32px/1 var(--display); }
+.poscard span { font-size: 12.5px; color: var(--muted); }
+.ev-link { color: inherit; text-decoration: none; display: grid; gap: 6px; min-width: 0; }
+.ev-link:hover .tm span { text-decoration: underline; text-decoration-color: var(--amber); text-underline-offset: 3px; }
+
+/* ---------- Segmented control + standings ---------- */
+.seg { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 3px; gap: 2px; flex: none; }
+.seg button { border: 0; background: transparent; border-radius: 9px; padding: 7px 14px; cursor: pointer; font: 600 15px/1 var(--display); letter-spacing: .02em; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--amber); color: var(--on-amber); }
+.tblwrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; }
+table.stand { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 720px; }
+.table-mode .cols { grid-template-columns: minmax(0, 1fr); }
+.table-mode .aside { position: static; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+table.stand th, table.stand td { padding: 9px 7px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+table.stand th { font: 600 13px/1.2 var(--display); color: var(--muted); letter-spacing: .02em; position: sticky; top: 0; background: var(--surface); }
+table.stand td { font: 600 15.5px/1 var(--display); font-variant-numeric: tabular-nums; }
+table.stand th.l, table.stand td.l { text-align: left; }
+table.stand td.tm2 { font: 700 15.5px/1.2 var(--display); text-align: left; }
+table.stand td.tm2 > span { display: inline-flex; align-items: center; gap: 8px; }
+table.stand td.rk { color: var(--muted); width: 34px; }
+table.stand tr:last-child td { border-bottom: 0; }
+table.stand td.pr { position: relative; min-width: 64px; }
+table.stand td.pr i { position: absolute; left: 6px; right: 6px; bottom: 5px; height: 3px; border-radius: 2px; background: var(--line); }
+table.stand td.pr i b { display: block; height: 100%; border-radius: 2px; background: var(--amber); }
+table.stand td.pr.bad i b { background: var(--neg); }
+table.stand td.zero { color: var(--muted); font-weight: 500; }
+.tnote { margin: 10px 2px 0; font-size: 12.5px; color: var(--muted); }
+
+/* ---------- Record ---------- */
+.chart { width: 100%; max-width: 520px; height: auto; display: block; }
+.legend2 { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
+.legend2 i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+
 footer { border-top: 1px solid var(--line); padding-block: 22px 36px; color: var(--muted); font-size: 13px; }
 footer .wrap { display: flex; gap: 14px; align-items: flex-start; }
 footer p { margin: 0 0 4px; max-width: 80ch; }
@@ -340,6 +408,7 @@ footer .age { border-color: var(--muted); color: var(--muted); }
   .odds.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .detail { grid-template-columns: minmax(0, 1fr); }
   .search { flex: 1 1 100%; }
+  .mv-grid { grid-template-columns: minmax(0, 1fr); }
   .pick { grid-template-columns: minmax(0, 1fr); }
   .pick .vs { display: none; }
 }
@@ -375,6 +444,8 @@ footer .age { border-color: var(--muted); color: var(--muted); }
       <p id="stamp">Φόρτωση δεδομένων…</p>
     </div>
 
+    <section class="mview" id="match-view" hidden aria-live="polite"></section>
+
     <section class="stage" id="stage" hidden>
       <article class="hero" id="hero" aria-live="polite"></article>
       <aside class="bigs" id="bigs" aria-label="Μεγάλοι αγώνες"></aside>
@@ -385,6 +456,7 @@ footer .age { border-color: var(--muted); color: var(--muted); }
         <section id="view-football" role="tabpanel" aria-labelledby="tab-football">
           <div class="bar">
             <div class="lghead" id="fb-head"></div>
+            <div class="seg" id="fb-seg" role="group" aria-label="Προβολή" hidden><button type="button" data-v="matches" aria-pressed="true">Αγώνες</button><button type="button" data-v="table" aria-pressed="false">Βαθμολογία</button></div>
             <div class="leagues" id="fb-leagues" role="group" aria-label="Διοργανώσεις ποδοσφαίρου"></div>
             <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="fb-q" type="search" placeholder="Βρες ομάδα" autocomplete="off" aria-label="Αναζήτηση ομάδας"></label>
           </div>
@@ -429,6 +501,8 @@ footer .age { border-color: var(--muted); color: var(--muted); }
       <p>Χρησιμοποιούνται οι αγώνες των τελευταίων 11 μηνών (15 για τα ευρωπαϊκά), και οι πρόσφατοι μετράνε περισσότερο: ένας αγώνας πριν από 5 μήνες έχει το μισό βάρος από έναν χθεσινό. Έτσι νωρίς στη σεζόν η περσινή χρονιά δίνει την αφετηρία, και με τον καιρό βαραίνουν τα φετινά. Μια ομάδα με λίγους αγώνες «τραβιέται» προς το επίπεδο του πρωταθλήματός της. Το πλεονέκτημα έδρας υπολογίζεται χωριστά για κάθε διοργάνωση (στην Ελλάδα και στη Γερμανία είναι μεγαλύτερο απ' ό,τι στην Ιταλία), και σε ουδέτερο γήπεδο δεν μετράει.</p>
       <p>Κάθε αλλαγή στο μοντέλο ελέγχεται σε αγώνες που έχουν ήδη παιχτεί: το μοντέλο «βλέπει» μόνο τα δεδομένα πριν από κάθε εβδομάδα και προβλέπει τους αγώνες της. Σε 622 αγώνες από τα τέλη Αυγούστου ως τα μέσα Οκτωβρίου 2026 βρήκε το πιο πιθανό σημείο στο 52% των περιπτώσεων, ενώ η πρόβλεψη «πάντα άσος» έπιανε το 44%. Κανένα μοντέλο δεν πιάνει πολύ πάνω από 55% στο 1Χ2: το ποδόσφαιρο έχει πολλή τύχη.</p>
       <p>Τα γκολ κάθε ομάδας ακολουθούν κατανομή Poisson. Συνδυάζοντάς τες παίρνουμε την πιθανότητα για κάθε σκορ από 0-0 έως 10-10, με τη διόρθωση Dixon–Coles (ρ = −0,10) που ανεβάζει ελαφρά τα 0-0 και 1-1. Από τον πίνακα σκορ αθροίζονται όλες οι αγορές: 1Χ2, Over/Under, Γκολ-Γκολ, διπλή ευκαιρία.</p>
+      <h3>Βαθμολογίες και τελική κατάταξη</h3>
+      <p>Για κάθε πρωτάθλημα, το μοντέλο υπολογίζει τις πιθανότητες για όλους τους αγώνες που απομένουν και «παίζει» την υπόλοιπη σεζόν 5.000 φορές. Από αυτές βγαίνουν οι αναμενόμενοι βαθμοί κάθε ομάδας και πόσο συχνά τερματίζει πρώτη, στις τέσσερις πρώτες θέσεις ή στις τρεις τελευταίες. Σε πρωταθλήματα με πλέι οφ (Super League, Βέλγιο) προσομοιώνεται μόνο η κανονική διάρκεια.</p>
       <h3>Μπάσκετ: αναμενόμενοι πόντοι</h3>
       <p>Κάθε ομάδα έχει δείκτη επίθεσης (πόντοι που βάζει πάνω ή κάτω από τον μέσο όρο της διοργάνωσης) και άμυνας (πόντοι που δέχεται). Όπως και στο ποδόσφαιρο, μετράνε οι αγώνες των τελευταίων 15 μηνών με μεγαλύτερο βάρος στους πρόσφατους, και οι ομάδες με λίγους αγώνες τραβιούνται προς τον μέσο όρο. Κάθε διοργάνωση (EuroLeague, EuroCup, NBA) υπολογίζεται χωριστά.</p>
       <div class="formula">Πόντοι γηπ. = Μ.Ο. + Επίθεση<sub>γηπ.</sub> + Άμυνα<sub>φιλ.</sub> + έδρα/2 &nbsp;&nbsp; Διαφορά ~ Κανονική(μ, σ)</div>
@@ -490,12 +564,13 @@ footer .age { border-color: var(--muted); color: var(--muted); }
     set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
   };
 
-  let DATA, HIST;
+  let DATA, HIST, TABLES;
   try {
     const bust = "?t=" + Math.floor(Date.now() / 600000);
-    [DATA, HIST] = await Promise.all([
+    [DATA, HIST, TABLES] = await Promise.all([
       fetch("data.json" + bust).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
-      fetch("history.json" + bust).then(r => r.ok ? r.json() : { events: {} }).catch(() => ({ events: {} }))
+      fetch("history.json" + bust).then(r => r.ok ? r.json() : { events: {} }).catch(() => ({ events: {} })),
+      fetch("tables.json" + bust).then(r => r.ok ? r.json() : { leagues: [] }).catch(() => ({ leagues: [] }))
     ]);
   } catch (e) {
     $("#stamp").textContent = "Τα δεδομένα δεν φόρτωσαν. Ανανέωσε τη σελίδα σε λίγο.";
@@ -732,7 +807,8 @@ footer .age { border-color: var(--muted); color: var(--muted); }
     const time = el("div", "ev-time");
     const lg = el("span"); lg.append(iconEl(m.cc), document.createTextNode(m.league));
     time.append(el("b", null, fTime.format(m.kt)), lg);
-    const teams = el("div", "ev-teams");
+    const teams = el("a", "ev-teams ev-link"); teams.href = "#m/" + encodeURIComponent(m.id);
+    teams.setAttribute("aria-label", `Σελίδα αγώνα ${m.home} – ${m.away}`);
     [m.home, m.away].forEach(n => { const t = el("div", "tm"); t.append(mono(n, "sm"), el("span", null, n)); teams.append(t); });
     teams.append(pbar(m.r));
     if (m.sport === "basketball") {
@@ -766,7 +842,12 @@ footer .age { border-color: var(--muted); color: var(--muted); }
     const ls = [...new Set(list.map(m => m.league))].sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
     let cur = store.get("pp-lg-" + sport);
     if (!cur || (cur !== "all" && !ls.includes(cur))) cur = "all";
-    state[sport] = { league: cur, q: "" };
+    state[sport] = { league: cur, q: "", view: store.get("pp-view") === "table" ? "table" : "matches" };
+    const seg = sport === "football" ? $("#fb-seg") : null;
+    const tableOf = k => (TABLES.leagues || []).find(L => L.name === k);
+    if (seg) seg.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+      state[sport].view = b.dataset.v; store.set("pp-view", b.dataset.v); draw();
+    }));
     const host = $(`#${sport === "football" ? "fb" : "bb"}-leagues`);
     const listHost = $(`#${sport === "football" ? "fb" : "bb"}-list`);
     const q = $(`#${sport === "football" ? "fb" : "bb"}-q`);
@@ -795,6 +876,14 @@ footer .age { border-color: var(--muted); color: var(--muted); }
     }
     function draw() {
       const s = state[sport], needle = fold(s.q.trim());
+      const tbl = seg && s.league !== "all" ? tableOf(s.league) : null;
+      if (seg) {
+        seg.hidden = !tbl;
+        seg.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === (tbl ? s.view : "matches"))));
+        q.parentElement.hidden = !!(tbl && s.view === "table");
+      }
+      if (seg) { tableMode = !!(tbl && s.view === "table"); document.body.classList.toggle("table-mode", tableMode && currentTab === "football"); }
+      if (tbl && s.view === "table") { listHost.textContent = ""; listHost.append(standingsEl(tbl)); return; }
       const shown = list.filter(m => (s.league === "all" || m.league === s.league) &&
         (!needle || fold(m.home).includes(needle) || fold(m.away).includes(needle)));
       listHost.textContent = "";
@@ -830,12 +919,37 @@ footer .age { border-color: var(--muted); color: var(--muted); }
     };
   }
 
+  /* ---------- standings ---------- */
+  function standingsEl(L) {
+    const wrap = el("div"), box = el("div", "tblwrap"), t = el("table", "stand");
+    const cols = [["#", "rk"], ["Ομάδα", "l"], ["Αγ", ""], ["Ν", ""], ["Ι", ""], ["Η", ""], ["Γκολ", ""], ["Β", ""], ["Φόρμα", "l"]];
+    if (L.sim) cols.push(["Αναμ. βαθμοί", ""], ["1η θέση", ""], ["Top 4", ""], ["Τελευταίοι 3", ""]);
+    const hr = el("tr"); cols.forEach(([c, k]) => hr.append(el("th", k || null, c)));
+    const th = el("thead"); th.append(hr); t.append(th);
+    const tb = el("tbody");
+    const prob = (p, bad) => {
+      const td = el("td", "pr" + (bad ? " bad" : "") + (p < 0.005 ? " zero" : ""), p < 0.005 ? "–" : p > 0.995 ? ">99%" : pct(p));
+      const i = el("i"), b = el("b"); b.style.width = Math.round(p * 100) + "%"; i.append(b); td.append(i); return td;
+    };
+    L.rows.forEach((r, k) => {
+      const tr = el("tr"), nm = el("td", "tm2"), sp = el("span"); sp.append(mono(r.t, "sm"), document.createTextNode(r.t)); nm.append(sp);
+      const fm = el("td", "l"); fm.append(pills(r.form.split("").map(x => ({ r: x }))));
+      tr.append(el("td", "rk", String(k + 1)), nm, el("td", null, String(r.p)), el("td", null, String(r.w)), el("td", null, String(r.d)),
+        el("td", null, String(r.l)), el("td", null, `${r.gf}:${r.ga}`), el("td", null, String(r.pts)), fm);
+      if (L.sim) tr.append(el("td", null, dec(r.xp, 0)), prob(r.p1), prob(r.p4), prob(r.pb, true));
+      tb.append(tr);
+    });
+    t.append(tb); box.append(t); wrap.append(box);
+    if (L.note) wrap.append(el("p", "tnote", L.note + (L.sim ? " Οι πιθανότητες βγαίνουν από τις πιθανότητες κάθε αγώνα που απομένει, όπως τις υπολογίζει το μοντέλο." : "")));
+    return wrap;
+  }
+
   /* ---------- left navigation ---------- */
   const SPORT_IC = {
     football: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="m12 7.2 4.1 3-1.6 4.8h-5l-1.6-4.8z" fill="currentColor" stroke="none"/><path d="M12 7.2V2.6M16.1 10.2l4.4-1.5M14.5 15l2.8 3.8M9.5 15l-2.8 3.8M7.9 10.2 3.5 8.7"/></svg>',
     basketball: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19M12 2.5v19M5.3 5.3c3.3 3.3 3.3 10.1 0 13.4M18.7 5.3c-3.3 3.3-3.3 10.1 0 13.4"/></svg>',
   };
-  let currentTab = "football";
+  let currentTab = "football", tableMode = false;
   function drawNav() {
     const nav = $("#leftnav"); if (!nav) return;
     nav.textContent = "";
@@ -850,6 +964,7 @@ footer .age { border-color: var(--muted); color: var(--muted); }
         const n = k === "all" ? v.list.length : v.list.filter(m => m.league === k).length;
         b.append(ic, el("span", "nm", lab), el("span", "n", String(n)));
         b.addEventListener("click", () => {
+          if (location.hash.startsWith("#m/")) history.pushState(null, "", location.pathname), closeMatch();
           const switched = currentTab !== sp;
           showTab(sp); v.setLeague(k);
           const sec = $("#view-" + sp), top = sec.getBoundingClientRect().top;
@@ -865,7 +980,7 @@ footer .age { border-color: var(--muted); color: var(--muted); }
       const b = el("button", "ln-item sub"); b.type = "button"; b.setAttribute("aria-current", String(currentTab === tab));
       const ic = el("span", "all-ic"); ic.textContent = tab === "tennis" ? "T" : tab === "record" ? "✓" : "?";
       b.append(ic, el("span", "nm", lab), el("span", "n", ""));
-      b.addEventListener("click", () => { showTab(tab); $("#view-" + tab).scrollIntoView({ behavior: "smooth", block: "start" }); });
+      b.addEventListener("click", () => { if (location.hash.startsWith("#m/")) history.pushState(null, "", location.pathname), closeMatch(); showTab(tab); $("#view-" + tab).scrollIntoView({ behavior: "smooth", block: "start" }); });
       other.append(b);
     });
     nav.append(other);
@@ -875,8 +990,12 @@ footer .age { border-color: var(--muted); color: var(--muted); }
   const PITCH = '<svg viewBox="0 0 400 240" preserveAspectRatio="xMidYMid slice"><g fill="none" stroke="#fff" stroke-width="2"><rect x="10" y="10" width="380" height="220"/><path d="M200 10v220"/><circle cx="200" cy="120" r="38"/><rect x="10" y="62" width="58" height="116"/><rect x="332" y="62" width="58" height="116"/><rect x="10" y="94" width="20" height="52"/><rect x="370" y="94" width="20" height="52"/></g></svg>';
   const COURT = '<svg viewBox="0 0 400 240" preserveAspectRatio="xMidYMid slice"><g fill="none" stroke="#fff" stroke-width="2"><rect x="10" y="10" width="380" height="220"/><path d="M200 10v220"/><circle cx="200" cy="120" r="32"/><path d="M10 30h50a90 90 0 0 1 0 180H10M390 30h-50a90 90 0 0 0 0 180h50"/><rect x="10" y="86" width="70" height="68"/><rect x="320" y="86" width="70" height="68"/></g></svg>';
   let views = {};
-  function renderHero(m, list) {
-    const h = $("#hero"); h.textContent = "";
+  function renderHero(m) {
+    fillHero($("#hero"), m, true);
+    $("#bigs").querySelectorAll(".big").forEach(b => b.setAttribute("aria-current", String(b._m === m)));
+  }
+  function fillHero(h, m, withLink) {
+    h.textContent = "";
     h.className = "hero" + (m.sport === "basketball" ? " bb" : "");
     const lines = el("div", "lines"); lines.innerHTML = m.sport === "basketball" ? COURT : PITCH;
     const top = el("div", "hero-top");
@@ -900,12 +1019,166 @@ footer .age { border-color: var(--muted); color: var(--muted); }
       facts.append(fact("Αναμενόμενο σκορ", `${Math.round(m.expHome)}-${Math.round(m.expAway)}`),
         fact("Χάντικαπ", (sp > 0 ? "+" : "") + dec(sp)), fact("Σύνολο", dec(m.r.total)));
     }
-    const go = el("span", "go"), gb = el("button", "btn-ghost", "Δες όλη την ανάλυση"); gb.type = "button";
-    gb.addEventListener("click", () => { showTab(m.sport); views[m.sport].reveal(m); });
-    go.append(gb); facts.append(go);
+    if (withLink) {
+      const go = el("span", "go"), gb = el("a", "btn-ghost", "Δες όλη την ανάλυση");
+      gb.href = "#m/" + encodeURIComponent(m.id); gb.style.textDecoration = "none"; gb.style.display = "inline-block";
+      go.append(gb); facts.append(go);
+    }
     h.append(lines, top, duel, bar, lab, oddsBox(m), facts);
-    $("#bigs").querySelectorAll(".big").forEach(b => b.setAttribute("aria-current", String(b._m === m)));
   }
+
+  /* ---------- match page ---------- */
+  const fShort = new Intl.DateTimeFormat("el-GR", { day: "numeric", month: "numeric", year: "2-digit" });
+  const dShort = s => fShort.format(new Date(s + "T12:00:00Z"));
+  const rCount = f => ({ W: f.filter(x => x.r === "W").length, D: f.filter(x => x.r === "D").length, L: f.filter(x => x.r === "L").length });
+  function pills(list) {
+    const w = el("span", "pills");
+    list.slice().reverse().forEach(f => {
+      const s = el("span", "pill " + f.r, f.r === "W" ? "Ν" : f.r === "D" ? "Ι" : "Η");
+      if (f.d) s.title = `${f.gf}-${f.ga} ${f.h ? "εντός" : "εκτός"} με ${f.o} (${f.lg}, ${dShort(f.d)})`;
+      w.append(s);
+    });
+    return w;
+  }
+  function card(title) { const c = el("section", "card"); c.append(el("h2", null, title)); return c; }
+  function whyList(m) {
+    const I = m.info || {}, out = [];
+    const ord = n => n + "η";
+    if (m.sport === "football") {
+      out.push(`Το μοντέλο περιμένει ${dec(m.lambdaHome)} γκολ για ${m.home} και ${dec(m.lambdaAway)} για ${m.away}.`);
+      const [ph, pa] = I.pos || [], [lh, la] = I.lvl || [];
+      if (ph && pa && ph.lg === pa.lg) out.push(`Βαθμολογία ${ph.lg}: ${m.home} ${ord(ph.rank)} με ${ph.pts} βαθμούς, ${m.away} ${ord(pa.rank)} με ${pa.pts}.`);
+      else {
+        if (ph) out.push(`${m.home}: ${ord(ph.rank)} θέση στη βαθμολογία της ${ph.lg} (${ph.pts} βαθμοί σε ${ph.p} αγώνες).`);
+        if (pa) out.push(`${m.away}: ${ord(pa.rank)} θέση στη βαθμολογία της ${pa.lg} (${pa.pts} βαθμοί σε ${pa.p} αγώνες).`);
+        if (lh && la && lh[1] != null && la[1] != null && lh[0] !== la[0] && Math.abs(lh[1] - la[1]) >= 0.15) {
+          const [s, w] = lh[1] > la[1] ? [lh[0], la[0]] : [la[0], lh[0]];
+          out.push(`Το μοντέλο υπολογίζει ότι η ${s} είναι αρκετά πιο δυνατό πρωτάθλημα από τη ${w}, γι' αυτό οι επιδόσεις στο εσωτερικό δεν μετράνε το ίδιο.`);
+        }
+      }
+    } else {
+      out.push(`Αναμενόμενο σκορ ${Math.round(m.expHome)}-${Math.round(m.expAway)}: διαφορά ${dec(Math.abs(m.r.mg))} πόντων υπέρ ${m.r.mg >= 0 ? m.home : m.away}.`);
+    }
+    const [fh, fa] = I.form || [];
+    if (fh && fh.length && fa && fa.length) {
+      const a = rCount(fh), b = rCount(fa), wl = m.sport === "football" ? c => `${c.W}Ν-${c.D}Ι-${c.L}Η` : c => `${c.W}Ν-${c.L}Η`;
+      out.push(`Τελευταίοι ${Math.min(fh.length, fa.length)} αγώνες σε όλες τις διοργανώσεις: ${m.home} ${wl(a)}, ${m.away} ${wl(b)}.`);
+    }
+    out.push(`Πλεονέκτημα έδρας: ${m.home}.`);
+    const b = best(m);
+    let verdict;
+    if (b[0] === "Χ") verdict = `Πιθανότερη η ισοπαλία (${pct(b[1])}), χωρίς καθαρό φαβορί.`;
+    else if (b[1] >= 0.65) verdict = `Καθαρό φαβορί: ${b[0] === "1" ? m.home : m.away} (${pct(b[1])}).`;
+    else if (b[1] >= 0.45) verdict = `Προβάδισμα για ${b[0] === "1" ? m.home : m.away} (${pct(b[1])}), όχι όμως καθαρό.`;
+    else verdict = `Ανοιχτό παιχνίδι: κανένα σημείο δεν ξεπερνά το 45%.`;
+    return [out, verdict];
+  }
+  function formTable(list, sport) {
+    const t = el("table", "flist"), tb = el("tbody");
+    list.forEach(f => {
+      const tr = el("tr"), op = el("td");
+      op.append(document.createTextNode((f.h ? "εντός με " : "εκτός με ") + f.o), el("small", null, f.lg));
+      const pc = el("td"); pc.append(pills([f]));
+      tr.append(el("td", "dd", dShort(f.d)), op, el("td", "sc", `${f.gf}-${f.ga}`), pc);
+      tb.append(tr);
+    });
+    t.append(tb); return t;
+  }
+  function compare(m) {
+    const [a, b] = (m.info || {}).stats || [];
+    if (!a || !b) return null;
+    const c = card(`Σύγκριση (τελευταίοι ${Math.min(a.n, b.n)} αγώνες)`);
+    const th = el("div", "teamhead"); th.append(el("span", null, m.home), el("span", null, m.away)); c.append(th);
+    const box = el("div", "cmp");
+    const rows = m.sport === "football"
+      ? [["Γκολ υπέρ ανά αγώνα", a.gf, b.gf, x => dec(x)], ["Γκολ κατά ανά αγώνα", a.ga, b.ga, x => dec(x)],
+         ["Over 2,5", a.o25, b.o25, pct], ["Γκολ-Γκολ", a.btts, b.btts, pct]]
+      : [["Πόντοι υπέρ ανά αγώνα", a.gf, b.gf, x => dec(x)], ["Πόντοι κατά ανά αγώνα", a.ga, b.ga, x => dec(x)]];
+    rows.forEach(([lab, x, y, f]) => {
+      const r = el("div", "cmp-row"), mid = el("div", "cmp-mid"), bars = el("div", "cmp-bars");
+      const mx = Math.max(x, y) || 1, i1 = el("i"), i2 = el("i");
+      i1.style.width = (x / mx * 100) + "%"; i2.style.width = (y / mx * 100) + "%";
+      bars.append(i1, i2); mid.append(el("span", null, lab), bars);
+      r.append(el("b", null, f(x)), mid, el("b", null, f(y))); box.append(r);
+    });
+    c.append(box); return c;
+  }
+  function openMatch(id) {
+    const m = matches.find(x => x.id === id), v = $("#match-view");
+    document.body.classList.add("match-open"); v.hidden = false; v.textContent = "";
+    const top = el("div", "mv-top");
+    const back = el("button", "btn"); back.type = "button";
+    back.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>';
+    back.append(document.createTextNode("Όλοι οι αγώνες"));
+    back.addEventListener("click", () => { location.hash = ""; });
+    top.append(back);
+    if (!m) {
+      v.append(top); const e = el("div", "empty");
+      e.append(el("h3", null, "Ο αγώνας δεν είναι πια στο πρόγραμμα"), el("p", null, "Μάλλον έχει ήδη παιχτεί. Το αποτέλεσμα και η πρόβλεψη υπάρχουν στο Ιστορικό."));
+      v.append(e); window.scrollTo(0, 0); return;
+    }
+    const share = el("button", "btn"); share.type = "button";
+    share.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13"/></svg>';
+    share.append(document.createTextNode("Μοιράσου τον αγώνα"));
+    share.addEventListener("click", async () => {
+      const url = location.href, title = `${m.home} – ${m.away}: πρόγνωση`;
+      try { if (navigator.share) { await navigator.share({ title, url }); return; } } catch (e) { return; }
+      try { await navigator.clipboard.writeText(url); share.lastChild.textContent = "Ο σύνδεσμος αντιγράφηκε"; }
+      catch (e) { share.lastChild.textContent = url; }
+    });
+    top.append(share);
+    const hero = el("article", "hero"); fillHero(hero, m, false);
+    const [lines, verdict] = whyList(m);
+    const why = card("Γιατί αυτή η πρόβλεψη"); why.classList.add("why");
+    const ul = el("ul"); lines.forEach(s => ul.append(el("li", null, s)));
+    why.append(ul, el("p", "verdict", verdict));
+    const grid = el("div", "mv-grid");
+    const I = m.info || {};
+    const [ph, pa] = I.pos || [];
+    if (ph || pa) {
+      const pc = card("Θέση στη βαθμολογία"); pc.classList.add("wide");
+      const box = el("div", "poscard");
+      [[m.home, ph], [m.away, pa]].forEach(([n, p]) => {
+        const d = el("div");
+        if (p) d.append(el("span", null, n), el("b", null, p.rank + "η"), el("span", null, `από ${p.of} στη ${p.lg}, ${p.pts} βαθμοί σε ${p.p} αγώνες`));
+        else d.append(el("span", null, n), el("b", null, "–"), el("span", null, "Δεν υπάρχει βαθμολογία πρωταθλήματος"));
+        box.append(d);
+      });
+      pc.append(box); grid.append(pc);
+    }
+    const [fh, fa] = I.form || [];
+    [[m.home, fh], [m.away, fa]].forEach(([n, f]) => {
+      if (!f || !f.length) return;
+      const c = card(`Φόρμα: ${n}`), hd = el("div"); hd.append(pills(f)); c.append(hd, formTable(f, m.sport)); grid.append(c);
+    });
+    const cmp = compare(m); if (cmp) { cmp.classList.add("wide"); grid.append(cmp); }
+    const hh = card("Προηγούμενες αναμετρήσεις"); hh.classList.add("wide");
+    if (I.h2h && I.h2h.length) {
+      const t = el("table", "flist"), tb = el("tbody");
+      I.h2h.forEach(g => { const tr = el("tr"), mt = el("td"); mt.append(document.createTextNode(`${g.h} – ${g.a}`), el("small", null, g.lg));
+        tr.append(el("td", "dd", dShort(g.d)), mt, el("td", "sc", `${g.hs}-${g.as_}`)); tb.append(tr); });
+      t.append(tb); hh.append(t);
+    } else hh.append(el("p", null, "Δεν έχουν παίξει μεταξύ τους τους τελευταίους μήνες."));
+    grid.append(hh);
+    const an = card("Αναλυτικά"); an.classList.add("wide");
+    const det = m.sport === "football" ? detailFootball(m) : detailBasketball(m);
+    det.style.background = "transparent"; det.style.borderTop = "0"; det.style.padding = "0";
+    an.append(det); grid.append(an);
+    v.append(top, hero, why, grid);
+    document.title = `${m.home} – ${m.away}: πρόγνωση | SamurAI bet`;
+    window.scrollTo(0, 0);
+  }
+  let lastScroll = 0;
+  function closeMatch() {
+    document.body.classList.remove("match-open"); $("#match-view").hidden = true; document.title = "SamurAI bet";
+    requestAnimationFrame(() => window.scrollTo(0, lastScroll));
+  }
+  function route() {
+    const h = location.hash;
+    if (h.startsWith("#m/")) { if (!document.body.classList.contains("match-open")) lastScroll = window.scrollY; openMatch(decodeURIComponent(h.slice(3))); }
+    else if (document.body.classList.contains("match-open")) closeMatch();
+  }
+  window.addEventListener("hashchange", route);
   function renderStage() {
     const soon = matches.filter(m => m.kt.getTime() > NOW && m.kt.getTime() < NOW + 4 * 864e5)
       .map(m => [importance(m), m]).sort((a, b) => b[0] - a[0]).map(x => x[1]);
@@ -940,9 +1213,11 @@ footer .age { border-color: var(--muted); color: var(--muted); }
         row.append(t, s); host.append(row);
       });
     }
-    const done = Object.values(HIST.events || {}).filter(e => e.result && e.p);
+    let done = Object.values(HIST.events || {}).filter(e => e.result && e.p), retro = false;
+    if (done.length < 30 && ((HIST.bt || {}).items || []).length) { done = HIST.bt.items; retro = true; }
     if (done.length >= 5) {
       $("#form-card").hidden = false;
+      if (retro) $("#form-card").querySelector("h2").after(el("p", null, "Αναδρομικός έλεγχος των τελευταίων εβδομάδων, μέχρι να μαζευτούν ζωντανές προβλέψεις."));
       const fb = done.filter(e => e.sport === "football"), bb = done.filter(e => e.sport === "basketball");
       const host = $("#form"), tiles = el("div", "tiles"); tiles.style.gridTemplateColumns = "1fr 1fr";
       if (fb.length) {
@@ -1000,32 +1275,65 @@ footer .age { border-color: var(--muted); color: var(--muted); }
   }
 
   /* ---------- record ---------- */
-  function renderRecord() {
-    const host = $("#record"), all = Object.values(HIST.events || {}).filter(e => e.result && e.p);
-    if (!all.length) {
-      const e = el("div", "empty");
-      e.append(el("h3", null, "Το ιστορικό γεμίζει μόλις τελειώσουν οι πρώτοι αγώνες"),
-        el("p", null, "Κάθε πρόβλεψη κρατιέται όπως ήταν πριν από τη σέντρα ή το τζάμπολ. Μετά τον αγώνα μπαίνει δίπλα το αποτέλεσμα, και εδώ φαίνεται πόσο συχνά βγήκε το πιο πιθανό σημείο."));
-      host.append(e); return;
+  const outc = r => r.home > r.away ? "H" : r.home === r.away ? "D" : "A";
+  function evalSet(items) {
+    const fb = items.filter(e => e.sport === "football"), bb = items.filter(e => e.sport === "basketball");
+    let hit = 0, exp = 0, br = 0, ou = 0;
+    fb.forEach(e => { const p = e.p, real = outc(e.result), b = [["H", p.H], ["D", p.D], ["A", p.A]].sort((a, c) => c[1] - a[1])[0];
+      if (b[0] === real) hit++; exp += b[1];
+      br += (p.H - (real === "H")) ** 2 + (p.D - (real === "D")) ** 2 + (p.A - (real === "A")) ** 2;
+      if ((p.O25 >= 0.5) === (e.result.home + e.result.away > 2.5)) ou++; });
+    let bhit = 0, bexp = 0;
+    bb.forEach(e => { const hf = e.p.H >= 0.5; if (hf === (e.result.home > e.result.away)) bhit++; bexp += Math.max(e.p.H, e.p.A); });
+    return { fb, bb, hit, exp, br, ou, bhit, bexp };
+  }
+  function calibration(fb) {
+    const bins = Array.from({ length: 10 }, () => ({ n: 0, p: 0, y: 0 }));
+    fb.forEach(e => { const real = outc(e.result);
+      [["H", e.p.H], ["D", e.p.D], ["A", e.p.A]].forEach(([k, p]) => { const b = bins[Math.min(9, Math.floor(p * 10))]; b.n++; b.p += p; b.y += real === k; }); });
+    const W = 340, H = 240, L = 40, B = 34, R = 12, T = 12, x = v => L + v * (W - L - R), y = v => H - B - v * (H - B - T);
+    let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Γράφημα βαθμονόμησης">`;
+    for (let k = 0; k <= 10; k += 2) {
+      s += `<line x1="${x(k / 10)}" y1="${y(0)}" x2="${x(k / 10)}" y2="${y(1)}" style="stroke:var(--line)" stroke-width="1"/>`;
+      s += `<line x1="${x(0)}" y1="${y(k / 10)}" x2="${x(1)}" y2="${y(k / 10)}" style="stroke:var(--line)" stroke-width="1"/>`;
+      s += `<text x="${x(k / 10)}" y="${H - B + 16}" text-anchor="middle" style="fill:var(--muted);font:600 11px var(--display)">${k * 10}%</text>`;
+      s += `<text x="${L - 6}" y="${y(k / 10) + 4}" text-anchor="end" style="fill:var(--muted);font:600 11px var(--display)">${k * 10}%</text>`;
     }
+    s += `<line x1="${x(0)}" y1="${y(0)}" x2="${x(1)}" y2="${y(1)}" style="stroke:var(--muted)" stroke-width="1.5" stroke-dasharray="4 4"/>`;
+    const pts = bins.filter(b => b.n >= 8).map(b => [b.p / b.n, b.y / b.n, b.n]);
+    if (pts.length > 1) s += `<polyline fill="none" style="stroke:var(--amber)" stroke-width="2.5" points="${pts.map(p => x(p[0]) + "," + y(p[1])).join(" ")}"/>`;
+    pts.forEach(p => { s += `<circle cx="${x(p[0])}" cy="${y(p[1])}" r="${Math.min(9, 3 + Math.sqrt(p[2]) / 3)}" style="fill:var(--amber);stroke:var(--surface)" stroke-width="2"><title>Πρόβλεψη ${pct(p[0])}, βγήκε ${pct(p[1])} (${p[2]} περιπτώσεις)</title></circle>`; });
+    s += `<text x="${(L + W - R) / 2}" y="${H - 2}" text-anchor="middle" style="fill:var(--muted);font:500 11px var(--body)">Πιθανότητα που έδωσε το μοντέλο</text></svg>`;
+    return s;
+  }
+  function recordSet(items, host, label) {
     const tl = (lab, val, sub) => { const t = el("div", "tile"); t.append(el("span", null, lab), el("b", null, val), el("small", null, sub)); return t; };
-    const out = r => r.home > r.away ? "H" : r.home === r.away ? "D" : "A";
-    const fb = all.filter(e => e.sport === "football"), bb = all.filter(e => e.sport === "basketball"), tiles = el("div", "tiles");
-    if (fb.length) {
-      let hit = 0, br = 0, ou = 0;
-      fb.forEach(e => { const real = out(e.result), p = e.p;
-        if ([["H", p.H], ["D", p.D], ["A", p.A]].sort((a, b) => b[1] - a[1])[0][0] === real) hit++;
-        br += (p.H - (real === "H")) ** 2 + (p.D - (real === "D")) ** 2 + (p.A - (real === "A")) ** 2;
-        if ((p.O25 >= 0.5) === (e.result.home + e.result.away > 2.5)) ou++; });
-      tiles.append(tl("Ποδόσφαιρο, σωστό 1Χ2", pct(hit / fb.length), `${hit} από ${fb.length} αγώνες`),
-        tl("Ποδόσφαιρο, Over/Under 2,5", pct(ou / fb.length), `${ou} από ${fb.length}`),
-        tl("Ποδόσφαιρο, Brier", dec(br / fb.length, 3), "μικρότερο είναι καλύτερο, στην τύχη 0,667"));
-    }
-    if (bb.length) {
-      let hit = 0, br = 0;
-      bb.forEach(e => { const hw = e.result.home > e.result.away; if ((e.p.H >= 0.5) === hw) hit++; br += 2 * (e.p.H - (hw ? 1 : 0)) ** 2; });
-      tiles.append(tl("Μπάσκετ, σωστός νικητής", pct(hit / bb.length), `${hit} από ${bb.length} αγώνες`),
-        tl("Μπάσκετ, Brier", dec(br / bb.length, 3), "μικρότερο είναι καλύτερο, στην τύχη 0,500"));
+    const S = evalSet(items), tiles = el("div", "tiles");
+    if (S.fb.length) tiles.append(
+      tl("Ποδόσφαιρο, σωστό 1Χ2", pct(S.hit / S.fb.length), `${S.hit} από ${S.fb.length} αγώνες`),
+      tl("Αναμενόταν", pct(S.exp / S.fb.length), "όσο έλεγαν οι πιθανότητες του μοντέλου"),
+      tl("Over/Under 2,5", pct(S.ou / S.fb.length), `${S.ou} από ${S.fb.length}`),
+      tl("Brier", dec(S.br / S.fb.length, 3), "μικρότερο είναι καλύτερο, στην τύχη 0,667"));
+    if (S.bb.length) tiles.append(tl("Μπάσκετ, σωστός νικητής", pct(S.bhit / S.bb.length), `${S.bhit} από ${S.bb.length}, αναμενόταν ${pct(S.bexp / S.bb.length)}`));
+    host.append(tiles);
+    if (S.fb.length >= 30) {
+      const c = el("div", "panel"); c.style.gap = "10px";
+      c.append(el("h2", null, "Βγαίνουν τα ποσοστά;"),
+        el("p", "hint", "Κάθε κουκκίδα ομαδοποιεί προβλέψεις με παρόμοια πιθανότητα. Αν το μοντέλο είναι τίμιο, όσα έδωσε 70% πρέπει να βγαίνουν περίπου 7 στις 10, δηλαδή οι κουκκίδες να πέφτουν πάνω στη διακεκομμένη γραμμή."));
+      const g = el("div"); g.innerHTML = calibration(S.fb); c.append(g); host.append(c);
+      const by = new Map();
+      S.fb.forEach(e => { if (!by.has(e.league)) by.set(e.league, []); by.get(e.league).push(e); });
+      const lp = el("div", "panel"); lp.style.gap = "10px"; lp.append(el("h2", null, "Ανά πρωτάθλημα"));
+      const tw = el("div"); tw.style.overflowX = "auto";
+      const t = el("table", "tbl"), hr = el("tr");
+      ["Διοργάνωση", "Αγώνες", "Σωστό 1Χ2", "Αναμενόταν", "Brier"].forEach(x => hr.append(el("th", null, x)));
+      const th = el("thead"); th.append(hr); t.append(th); const tb = el("tbody");
+      [...by.entries()].sort((a, b) => b[1].length - a[1].length).forEach(([lg, arr]) => {
+        const s = evalSet(arr), tr = el("tr");
+        tr.append(el("td", "t", lg), el("td", null, String(arr.length)), el("td", null, pct(s.hit / arr.length)), el("td", null, pct(s.exp / arr.length)), el("td", null, dec(s.br / arr.length, 3)));
+        tb.append(tr);
+      });
+      t.append(tb); tw.append(t); lp.append(tw); host.append(lp);
     }
     const panel = el("div", "panel"); panel.style.gap = "10px";
     panel.append(el("h2", null, "Τελευταίοι αγώνες"));
@@ -1034,11 +1342,11 @@ footer .age { border-color: var(--muted); color: var(--muted); }
     ["Ημέρα", "Αγώνας", "Πρόβλεψη", "Τελικό", ""].forEach(x => hr.append(el("th", null, x)));
     const th = el("thead"); th.append(hr); t.append(th);
     const tb = el("tbody"), dshort = new Intl.DateTimeFormat("el-GR", { timeZone: TZ, day: "numeric", month: "numeric" });
-    all.sort((a, b) => b.kickoff.localeCompare(a.kickoff)).slice(0, 80).forEach(e => {
+    items.slice().sort((a, b) => b.kickoff.localeCompare(a.kickoff)).slice(0, 40).forEach(e => {
       let pick, prob, ok;
       if (e.sport === "football") {
-        const b = [["1", "H", e.p.H], ["Χ", "D", e.p.D], ["2", "A", e.p.A]].sort((a, b) => b[2] - a[2])[0];
-        pick = b[0]; prob = b[2]; ok = b[1] === out(e.result);
+        const b = [["1", "H", e.p.H], ["Χ", "D", e.p.D], ["2", "A", e.p.A]].sort((a, c) => c[2] - a[2])[0];
+        pick = b[0]; prob = b[2]; ok = b[1] === outc(e.result);
       } else { const hf = e.p.H >= 0.5; pick = hf ? "1" : "2"; prob = Math.max(e.p.H, e.p.A); ok = hf === (e.result.home > e.result.away); }
       const tr = el("tr"), mt = el("td", "t");
       mt.append(document.createTextNode(`${e.home} – ${e.away}`), el("small", null, e.league));
@@ -1046,8 +1354,34 @@ footer .age { border-color: var(--muted); color: var(--muted); }
         el("td", null, `${e.result.home}-${e.result.away}`), el("td", ok ? "ok" : "no", ok ? "✓" : "✗"));
       tb.append(tr);
     });
-    t.append(tb); tw.append(t); panel.append(tw);
-    host.append(tiles, panel);
+    t.append(tb); tw.append(t); panel.append(tw); host.append(panel);
+  }
+  function renderRecord() {
+    const host = $("#record"); host.textContent = "";
+    const live = Object.values(HIST.events || {}).filter(e => e.result && e.p);
+    const bt = ((HIST.bt || {}).items || []).filter(e => e.result && e.p);
+    if (!live.length && !bt.length) {
+      const e = el("div", "empty");
+      e.append(el("h3", null, "Το ιστορικό γεμίζει μόλις τελειώσουν οι πρώτοι αγώνες"),
+        el("p", null, "Κάθε πρόβλεψη κρατιέται όπως ήταν πριν από τη σέντρα ή το τζάμπολ, και μετά τον αγώνα μπαίνει δίπλα το αποτέλεσμα."));
+      host.append(e); return;
+    }
+    const seg = el("div", "seg"), body = el("div"); body.style.cssText = "display:grid;gap:16px";
+    const intro = el("p", "hint");
+    const modes = [["live", `Ζωντανές προβλέψεις (${live.length})`], ["bt", `Αναδρομικός έλεγχος (${bt.length})`]];
+    let mode = live.length >= 30 || !bt.length ? "live" : "bt";
+    const draw = () => {
+      seg.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === mode)));
+      body.textContent = "";
+      intro.textContent = mode === "live"
+        ? "Προβλέψεις που δημοσιεύτηκαν εδώ πριν από κάθε αγώνα και δεν άλλαξαν μετά."
+        : "Το ίδιο μοντέλο ξανατρέχει για καθεμία από τις τελευταίες εβδομάδες, βλέποντας μόνο τα αποτελέσματα πριν από αυτήν, και προβλέπει τους αγώνες της. Έτσι φαίνεται πώς θα τα πήγαινε, πριν μαζευτούν αρκετές ζωντανές προβλέψεις.";
+      const list = mode === "live" ? live : bt;
+      if (!list.length) { const e = el("div", "empty"); e.append(el("h3", null, "Δεν υπάρχουν ακόμα ζωντανές προβλέψεις με αποτέλεσμα"), el("p", null, "Ρίξε μια ματιά στον αναδρομικό έλεγχο μέχρι τότε.")); body.append(e); }
+      else recordSet(list, body);
+    };
+    modes.forEach(([k, lab]) => { const b = el("button", null, lab); b.type = "button"; b.dataset.v = k; b.addEventListener("click", () => { mode = k; draw(); }); seg.append(b); });
+    host.append(seg, intro, body); draw();
   }
 
   /* ---------- tabs, stamp ---------- */
@@ -1057,8 +1391,12 @@ footer .age { border-color: var(--muted); color: var(--muted); }
     TABS.forEach(t => { $("#view-" + t).hidden = t !== name; });
     store.set("pp-tab", name);
     currentTab = name; drawNav();
+    document.body.classList.toggle("table-mode", tableMode && name === "football");
   }
-  document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
+  document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => {
+    if (location.hash.startsWith("#m/")) { history.pushState(null, "", location.pathname); closeMatch(); }
+    showTab(b.dataset.tab);
+  }));
 
   const upd = new Date(DATA.updated);
   $("#stamp").textContent = "";
@@ -1076,6 +1414,7 @@ footer .age { border-color: var(--muted); color: var(--muted); }
   renderRecord();
   const hash = (location.hash || "").slice(1), saved = store.get("pp-tab");
   showTab(TABS.includes(hash) ? hash : TABS.includes(saved) && !$("#tab-" + saved).hidden ? saved : "football");
+  route();
 })();
 </script>
 </body>
