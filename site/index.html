@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Πόσο Πιθανό</title>
-<meta name="description" content="Πιθανότητες και δίκαιες αποδόσεις για ποδόσφαιρο και μπάσκετ από στατιστικά μοντέλα.">
+<title>SamurAI bet</title>
+<meta name="description" content="SamurAI bet: πιθανότητες και δίκαιες αποδόσεις για ποδόσφαιρο και μπάσκετ από στατιστικά μοντέλα.">
 <meta name="theme-color" content="#0A1714">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Commissioner:wght@400;500;600;700&family=Fira+Sans+Extra+Condensed:ital,wght@0,500;0,600;0,700;1,700;1,800;1,900&display=swap">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230A1714'/%3E%3Cpath d='M9 24 L23 8' stroke='%23FFB627' stroke-width='3.2' stroke-linecap='round'/%3E%3Ccircle cx='10.5' cy='10.5' r='3.4' fill='none' stroke='%23FFB627' stroke-width='2.6'/%3E%3Ccircle cx='21.5' cy='21.5' r='3.4' fill='none' stroke='%23FFB627' stroke-width='2.6'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23FFB627'/%3E%3Cpath d='M10.6 20.2 Q19.2 13.4 26.4 5.4 Q22.9 16 13.8 23.3 Z' fill='%231A1200'/%3E%3Cellipse cx='11' cy='21.9' rx='3.6' ry='1.35' transform='rotate%28-42 11 21.9%29' fill='%231A1200'/%3E%3Cpath d='M9.6 23.4 6.2 26.8' stroke='%231A1200' stroke-width='2.8' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
 /* Floodlit pitch at night: dark turf ground, floodlight-amber for the home side and the brand,
    sky-blue for the away side. Matchday-poster type (heavy condensed italic) for names and numbers. */
@@ -55,7 +55,8 @@ button, input, select { font: inherit; color: inherit; }
 .top .wrap { display: flex; align-items: center; gap: 22px; min-height: 60px; }
 .brand { display: flex; align-items: center; gap: 10px; color: #F3F7F5; text-decoration: none; flex: none; }
 .brand svg { width: 30px; height: 30px; }
-.brand b { font: italic 900 25px/1 var(--display); letter-spacing: 0.01em; }
+.brand b { font: italic 900 26px/1 var(--display); letter-spacing: 0.01em; }
+.brand b span { color: #FFB627; font-weight: 700; margin-left: 3px; }
 nav.tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; flex: 1; }
 nav.tabs::-webkit-scrollbar { display: none; }
 nav.tabs button {
@@ -305,9 +306,9 @@ footer .age { border-color: var(--muted); color: var(--muted); }
 <body>
 <header class="top gut">
   <div class="wrap">
-    <a class="brand" href="./" aria-label="Πόσο Πιθανό, αρχική">
-      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#FFB627"/><path d="M9.5 23.5 22.5 8.5" stroke="#1A1200" stroke-width="3.2" stroke-linecap="round"/><circle cx="10.8" cy="10.8" r="3.3" fill="none" stroke="#1A1200" stroke-width="2.6"/><circle cx="21.2" cy="21.2" r="3.3" fill="none" stroke="#1A1200" stroke-width="2.6"/></svg>
-      <b>Πόσο Πιθανό</b>
+    <a class="brand" href="./" aria-label="SamurAI bet, αρχική">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#FFB627"/><path d="M10.6 20.2 Q19.2 13.4 26.4 5.4 Q22.9 16 13.8 23.3 Z" fill="#1A1200"/><ellipse cx="11" cy="21.9" rx="3.6" ry="1.35" transform="rotate(-42 11 21.9)" fill="#1A1200"/><path d="M9.6 23.4 6.2 26.8" stroke="#1A1200" stroke-width="2.8" stroke-linecap="round"/></svg>
+      <b>SamurAI<span>bet</span></b>
     </a>
     <nav class="tabs" role="tablist" aria-label="Ενότητες">
       <button role="tab" id="tab-football" data-tab="football" aria-selected="true">Ποδόσφαιρο</button>
@@ -418,7 +419,7 @@ footer .age { border-color: var(--muted); color: var(--muted); }
   <div class="wrap">
     <span class="age">18+</span>
     <div>
-      <p>Το «Πόσο Πιθανό» δείχνει στατιστικές εκτιμήσεις και δεν είναι συμβουλή στοιχηματισμού. Δεν συνεργάζεται με στοιχηματικές εταιρείες.</p>
+      <p>Το SamurAI bet δείχνει στατιστικές εκτιμήσεις και δεν είναι συμβουλή στοιχηματισμού. Δεν συνεργάζεται με στοιχηματικές εταιρείες.</p>
       <p id="sources"></p>
     </div>
   </div>
