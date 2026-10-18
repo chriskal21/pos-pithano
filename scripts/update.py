@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Ενημέρωση δεδομένων για το «Πόσο Πιθανό» — μόνο με δωρεάν πηγές, χωρίς κλειδιά.
+Ενημέρωση δεδομένων για το SamurAI bet — μόνο με δωρεάν πηγές, χωρίς κλειδιά.
 
 Πηγές
   • ESPN (δημόσια JSON, ανεπίσημα): ποδόσφαιρο (πρωταθλήματα + Champions/Europa/Conference League) και NBA
@@ -41,6 +41,8 @@ OFFLINE = os.environ.get("OFFLINE_DIR")
 NOW = (dt.datetime.fromisoformat(os.environ["NOW"].replace("Z", "+00:00"))
        if os.environ.get("NOW") else dt.datetime.now(dt.timezone.utc))
 UTC = dt.timezone.utc
+START = time.monotonic()
+FETCH_BUDGET = 75 * 60    # δευτερόλεπτα: μετά από τόσο, τα παλιά (ιστορικά) δεδομένα συνεχίζουν στην επόμενη εκτέλεση
 
 # ------------------------------------------------------------------ τι εμφανίζεται
 # show=False: ο αγώνας χρησιμοποιείται μόνο για τις δυνάμεις (π.χ. ομάδες που παίζουν στα κύπελλα)
@@ -60,6 +62,8 @@ FOOTBALL = [
     dict(slug="uefa.europa", name="Europa League", cc="UEL", cup=True),
     dict(slug="uefa.europa.conf", name="Conference League", cc="UECL", cup=True),
     # μόνο για δυνάμεις
+    *[dict(slug=s, name=s, cc="", show=False, cup=True) for s in
+      ["uefa.champions_qual", "uefa.europa_qual", "uefa.europa.conf_qual"]],
     *[dict(slug=s, name=s, cc="", show=False) for s in
       ["eng.2", "aut.1", "sui.1", "den.1", "nor.1", "swe.1", "pol.1", "cze.1", "cro.1", "srb.1",
        "cyp.1", "isr.1", "rou.1", "ukr.1", "hun.1", "svk.1", "svn.1", "bul.1"]],
@@ -74,7 +78,7 @@ ORDER = [l["name"] for l in FOOTBALL if l.get("show", True)] + [l["name"] for l 
 HORIZON_DAYS = 8          # πόσες μέρες μπροστά δείχνει η σελίδα
 FALLBACK_DAYS = 21        # αν δεν υπάρχει αγώνας στις 8 μέρες, ψάχνει ως εδώ (π.χ. διακοπή εθνικών ομάδων)
 BACKFILL_DAYS = 330       # πόσο πίσω κοιτάει την πρώτη φορά (η πρώτη εκτέλεση κρατά ~20–30 λεπτά)
-HALF_LIFE = 180           # σε μέρες: ένας αγώνας πριν από 6 μήνες μετράει τα μισά
+HALF_LIFE = 150           # σε μέρες: ένας αγώνας πριν από 5 μήνες μετράει τα μισά
 RHO = -0.10               # διόρθωση Dixon–Coles
 FB_PRIOR = 4.0            # βάρος (σε αγώνες) της αφετηρίας κάθε ομάδας
 BB_PRIOR = 6.0
@@ -113,7 +117,7 @@ def get_json(url: str, pause: float = 0.25):
     last = None
     for attempt in range(3):
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (pos-pithano; +github pages)",
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (samurai-bet; +github pages)",
                                                        "Accept": "application/json"})
             with urllib.request.urlopen(req, timeout=40) as r:
                 body = r.read().decode("utf-8")
@@ -186,7 +190,7 @@ def parse_events(board: dict, sport: str, slug: str) -> list[dict]:
     return out
 
 
-def calendar_days(board: dict) -> set[str]:
+def calendar_days(board: dict, cup: bool = False) -> set[str]:
     """Οι μέρες (YYYY-MM-DD) με αγώνες, από το πεδίο calendar της απάντησης."""
     days = set()
 
@@ -203,10 +207,15 @@ def calendar_days(board: dict) -> set[str]:
                 items = c.get("entries") or [c]
                 for it in items:
                     a, b = parse_dt(it.get("startDate") or ""), parse_dt(it.get("endDate") or "")
-                    if a and b and (b - a).days <= 10:
+                    if a and b and (b - a).days <= 370:
+                        long_range = (b - a).days > 21
                         d = a.date()
                         while d <= b.date():
-                            days.add(d.isoformat()); d += dt.timedelta(days=1)
+                            # Μεγάλη περίοδος χωρίς λεπτομέρειες (π.χ. «League Phase Σεπ–Ιαν» ή «Regular Season»):
+                            # ρωτάμε μόνο τις μέρες που παίζονται συνήθως αγώνες.
+                            if not long_range or (d.weekday() in (1, 2, 3) if cup else d.weekday() != 3):
+                                days.add(d.isoformat())
+                            d += dt.timedelta(days=1)
                     elif a:
                         days.add(a.date().isoformat())
     return days
@@ -222,23 +231,28 @@ def refresh_espn(cache: dict, sport: str, slug: str, show: bool = True) -> None:
     board = espn_board(sport, slug)                       # τρέχουσα μέρα + ημερολόγιο τρέχουσας σεζόν
     for e in parse_events(board, sport, slug):
         lc["events"][e["id"]] = e
-    days = calendar_days(board)
+    cup = slug.startswith("uefa")
+    days = calendar_days(board, cup)
+    if lc.get("calver") != 2:                            # νέος τρόπος ανάγνωσης ημερολογίου: ξαναδιάβασέ το
+        lc["prevcal"], lc["calver"] = None, 2
     if lc["prevcal"] is None:                            # ημερολόγιο περσινής σεζόν, μία φορά
         try:
-            lc["prevcal"] = sorted(calendar_days(espn_board(sport, slug, today - dt.timedelta(days=300))))
+            lc["prevcal"] = sorted(calendar_days(espn_board(sport, slug, today - dt.timedelta(days=300)), cup))
         except FetchError:
             lc["prevcal"] = []
     days |= set(lc["prevcal"])
     if not days:                                          # χωρίς ημερολόγιο: κοίτα απλώς γύρω από σήμερα
         days = {(today + dt.timedelta(days=k)).isoformat() for k in range(-3, 11)}
 
-    lo = (today - dt.timedelta(days=BACKFILL_DAYS)).isoformat()
+    lo = (today - dt.timedelta(days=BACKFILL_DAYS + (100 if slug.startswith("uefa") else 0))).isoformat()
     hi = (today + dt.timedelta(days=FALLBACK_DAYS if show else 0)).isoformat()
     final = set(lc["final"])
     todo = sorted((d for d in days if lo <= d <= hi and d not in final), reverse=True)   # πρώτα τα πρόσφατα
     fails = 0
     for d in todo:
         day = dt.date.fromisoformat(d)
+        if day < today - dt.timedelta(days=3) and time.monotonic() - START > FETCH_BUDGET:
+            break                                         # τα υπόλοιπα ιστορικά στην επόμενη εκτέλεση
         try:
             evs = parse_events(espn_board(sport, slug, day), sport, slug)
         except FetchError as e:
@@ -255,7 +269,7 @@ def refresh_espn(cache: dict, sport: str, slug: str, show: bool = True) -> None:
         if day < today - dt.timedelta(days=2):          # τα αποτελέσματα δεν αλλάζουν πια
             final.add(d)
 
-    cutoff = (NOW - dt.timedelta(days=BACKFILL_DAYS + 30)).isoformat()
+    cutoff = (NOW - dt.timedelta(days=BACKFILL_DAYS + 130)).isoformat()
     lc["events"] = {k: v for k, v in lc["events"].items() if v["when"] >= cutoff}
     lc["final"] = sorted(x for x in final if x >= cutoff[:10])
 
@@ -302,52 +316,64 @@ def weight(when: str) -> float:
     return 0.5 ** (max(days, 0) / HALF_LIFE)
 
 
-def fit_football(games: list[dict], team_league: dict):
-    """Poisson με επίθεση/άμυνα ανά ομάδα, κοινό για όλες τις διοργανώσεις."""
+# Επίπεδο κάθε πρωταθλήματος, από τον μέσο όρο βαθμολογίας Elo των ομάδων του (περίπου, όπως τον δίνουν
+# οι γνωστές κατατάξεις συλλόγων), με κλίμακα 0,0038 ανά βαθμό Elo. Την κλίμακα την επιβεβαιώνουν τα δεδομένα:
+# οι ομάδες που ανεβοκατεβαίνουν ανάμεσα σε Premier League και Championship δίνουν διαφορά ~0,8, όσο και ο πίνακας.
+# Είναι μόνο η αφετηρία: όπου υπάρχουν ευρωπαϊκά παιχνίδια, τα αποτελέσματα τη διορθώνουν. Χωρίς αυτήν κάθε
+# πρωτάθλημα θα ήταν «νησί» και η πρώτη της Super League θα έβγαινε ισάξια με την πρώτη της Premier League.
+LEAGUE_ELO = {
+    "eng.1": 1800, "esp.1": 1745, "ita.1": 1730, "ger.1": 1720, "fra.1": 1665,
+    "eng.2": 1600, "ned.1": 1585, "por.1": 1580, "bel.1": 1565, "tur.1": 1540,
+    "cze.1": 1500, "aut.1": 1500, "den.1": 1500, "sui.1": 1490, "gre.1": 1470,
+    "cro.1": 1450, "pol.1": 1450, "ukr.1": 1450, "sco.1": 1440, "nor.1": 1440,
+    "swe.1": 1430, "srb.1": 1400, "isr.1": 1400, "rou.1": 1400, "hun.1": 1400,
+    "cyp.1": 1390, "svk.1": 1370, "bul.1": 1360, "svn.1": 1340,
+}
+ELO_SCALE = 0.0038
+LEAGUE_LEVEL = {k: round(ELO_SCALE * (v - 1720), 3) for k, v in LEAGUE_ELO.items()}
+DEFAULT_LEVEL = round(ELO_SCALE * (1400 - 1720), 3)   # ομάδα που τη βλέπουμε μόνο σε κύπελλο
+HOME_PRIOR = 60.0          # πόσο «τραβιέται» η έδρα κάθε διοργάνωσης προς τη συνολική (σε γκολ)
+
+
+def fit_football(games: list[dict], team_league: dict, weight_fn=None, iters: int = 120):
+    """Dixon–Coles/Poisson με επίθεση και άμυνα ανά ομάδα, πλεονέκτημα έδρας ανά διοργάνωση και
+    αφετηρία ανά πρωτάθλημα. Όλες οι διοργανώσεις λύνονται μαζί."""
+    weight_fn = weight_fn or weight
     teams = {g["home"] for g in games} | {g["away"] for g in games}
-    att = {t: 1.0 for t in teams}; dfn = {t: 1.0 for t in teams}
-    prior_a = {t: 1.0 for t in teams}; prior_d = {t: 1.0 for t in teams}
-    mu, home = 1.3, 1.2
-    W = [(g, weight(g["when"])) for g in games]
-    for it in range(80):
-        if it == 25:   # αφετηρία κάθε ομάδας = μέσος όρος του πρωταθλήματός της
-            by = defaultdict(list)
-            for t in teams:
-                by[team_league.get(t)].append(t)
-            for lg, ts in by.items():
-                if lg is None:
-                    continue
-                ma = math.exp(sum(math.log(att[t]) for t in ts) / len(ts))
-                md = math.exp(sum(math.log(dfn[t]) for t in ts) / len(ts))
-                for t in ts:
-                    prior_a[t], prior_d[t] = ma * 0.97, md * 1.03
+    lvl = {t: LEAGUE_LEVEL.get(team_league.get(t), DEFAULT_LEVEL) for t in teams}
+    prior_a = {t: math.exp(lvl[t] / 2) for t in teams}
+    prior_d = {t: math.exp(-lvl[t] / 2) for t in teams}
+    att, dfn = dict(prior_a), dict(prior_d)
+    mu, hg = 1.3, 1.25
+    home = {}
+    W = [(g, weight_fn(g["when"])) for g in games]
+    for _ in range(iters):
         sg = defaultdict(float); se = defaultdict(float); cg = defaultdict(float); ce = defaultdict(float)
         for g, w in W:
-            hf = 1.0 if g["neutral"] else home
-            eh = mu * hf * att[g["home"]] * dfn[g["away"]]
-            ea = mu * att[g["away"]] * dfn[g["home"]]
-            sg[g["home"]] += w * g["hs"]; se[g["home"]] += w * eh / att[g["home"]]
-            sg[g["away"]] += w * g["as_"]; se[g["away"]] += w * ea / att[g["away"]]
-            cg[g["away"]] += w * g["hs"]; ce[g["away"]] += w * eh / dfn[g["away"]]
-            cg[g["home"]] += w * g["as_"]; ce[g["home"]] += w * ea / dfn[g["home"]]
+            h, a = g["home"], g["away"]
+            hf = 1.0 if g["neutral"] else home.get(g["league"], hg)
+            eh = mu * hf * att[h] * dfn[a]
+            ea = mu * att[a] * dfn[h]
+            sg[h] += w * g["hs"]; se[h] += w * eh / att[h]
+            sg[a] += w * g["as_"]; se[a] += w * ea / att[a]
+            cg[a] += w * g["hs"]; ce[a] += w * eh / dfn[a]
+            cg[h] += w * g["as_"]; ce[h] += w * ea / dfn[h]
         for t in teams:
             att[t] = (sg[t] + FB_PRIOR * prior_a[t]) / (se[t] + FB_PRIOR)
             dfn[t] = (cg[t] + FB_PRIOR * prior_d[t]) / (ce[t] + FB_PRIOR)
-        # κανονικοποίηση και κοινές παράμετροι
-        la = sum(math.log(v) for v in att.values()) / len(att)
-        ld = sum(math.log(v) for v in dfn.values()) / len(dfn)
-        for t in teams:
-            att[t] /= math.exp(la); dfn[t] /= math.exp(ld)
-        num_h = den_h = num = den = 0.0
+        nh = defaultdict(float); dh = defaultdict(float)
         for g, w in W:
             if not g["neutral"]:
-                num_h += w * g["hs"]; den_h += w * mu * att[g["home"]] * dfn[g["away"]]
-        home = num_h / den_h if den_h else home
+                nh[g["league"]] += w * g["hs"]; dh[g["league"]] += w * mu * att[g["home"]] * dfn[g["away"]]
+        hg = sum(nh.values()) / sum(dh.values()) if dh else hg
+        home = {L: (nh[L] + HOME_PRIOR * hg) / (dh[L] + HOME_PRIOR) for L in dh}
+        num = den = 0.0
         for g, w in W:
-            hf = 1.0 if g["neutral"] else home
+            hf = 1.0 if g["neutral"] else home.get(g["league"], hg)
             num += w * (g["hs"] + g["as_"])
             den += w * (hf * att[g["home"]] * dfn[g["away"]] + att[g["away"]] * dfn[g["home"]])
         mu = num / den if den else mu
+    home["_all"] = hg
     return mu, home, att, dfn
 
 
@@ -424,7 +450,7 @@ def update_elo(previous):
         return previous
     try:
         req = urllib.request.Request("https://tennisabstract.com/reports/atp_elo_ratings.html",
-                                     headers={"User-Agent": "Mozilla/5.0 (pos-pithano)"})
+                                     headers={"User-Agent": "Mozilla/5.0 (samurai-bet)"})
         html = urllib.request.urlopen(req, timeout=40).read().decode("utf-8", "replace")
         p = _Table(); p.feed(html)
         head = next(r for r in p.rows if "Player" in r and "Elo" in r)
@@ -529,7 +555,7 @@ def main() -> int:
 
     if fb_games:
         mu, home, att, dfn = fit_football(fb_games, team_league)
-        print(f"• ποδόσφαιρο: {len(fb_games)} αγώνες στο μοντέλο, μ={mu:.2f}, έδρα×{home:.2f}")
+        print(f"• ποδόσφαιρο: {len(fb_games)} αγώνες στο μοντέλο, μ={mu:.2f}, έδρα×{home['_all']:.2f}")
         for lg in FOOTBALL:
             if not lg.get("show", True):
                 continue
@@ -538,9 +564,10 @@ def main() -> int:
             if not ups:
                 continue
             for e in ups:
-                hf = 1.0 if e["neutral"] else home
-                ah, dh = att.get(e["home"], 0.85), dfn.get(e["home"], 1.15)
-                aa, da = att.get(e["away"], 0.85), dfn.get(e["away"], 1.15)
+                hf = 1.0 if e["neutral"] else home.get(lg["slug"], home["_all"])
+                dflt = (math.exp(DEFAULT_LEVEL / 2), math.exp(-DEFAULT_LEVEL / 2))
+                ah, dh = att.get(e["home"], dflt[0]), dfn.get(e["home"], dflt[1])
+                aa, da = att.get(e["away"], dflt[0]), dfn.get(e["away"], dflt[1])
                 lh, la = round(mu * hf * ah * da, 3), round(mu * aa * dh, 3)
                 m = dict(id=e["id"], sport="football", league=lg["name"], country=lg["cc"], kickoff=e["when"],
                          home=fb_name(e["home"]), away=fb_name(e["away"]), lambdaHome=lh, lambdaAway=la)
