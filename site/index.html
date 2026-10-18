@@ -48,7 +48,7 @@ button, input, select { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; border-radius: 6px; }
 .num { font-family: var(--display); font-variant-numeric: tabular-nums; }
 .gut { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-.wrap { max-width: 1200px; margin: 0 auto; }
+.wrap { max-width: 1440px; margin: 0 auto; }
 
 /* ---------- Top bar (always dark, like a stadium screen) ---------- */
 .top { background: var(--hdr); position: sticky; top: 0; z-index: 10; border-bottom: 1px solid #1B302A; padding-top: env(safe-area-inset-top, 0px); }
@@ -93,7 +93,7 @@ main { padding-block: 22px 40px; }
 .duel { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 14px; }
 .side { display: grid; justify-items: start; gap: 10px; min-width: 0; }
 .side.r { justify-items: end; text-align: right; }
-.side .nm { font: italic 900 clamp(26px, 4.4vw, 50px)/0.95 var(--display); letter-spacing: -0.005em; text-wrap: balance; overflow-wrap: break-word; max-width: 100%; }
+.side .nm { font: italic 900 clamp(26px, 3.3vw, 50px)/0.95 var(--display); letter-spacing: -0.005em; text-wrap: balance; overflow-wrap: break-word; max-width: 100%; }
 .vs { font: italic 800 22px/1 var(--display); color: rgba(255,255,255,.55); }
 .hero .pbar { height: 14px; border-radius: 4px; }
 .hero .plabels { display: flex; justify-content: space-between; font: 600 14px/1 var(--display); color: rgba(255,255,255,.8); margin-top: -8px; }
@@ -148,9 +148,44 @@ main { padding-block: 22px 40px; }
 .odd.best { border-color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber); }
 .odd.best .v { color: var(--amber-ink); }
 
-/* ---------- League chips + search ---------- */
+/* ---------- Left navigation: competitions ---------- */
+.layout { display: grid; grid-template-columns: 252px minmax(0, 1fr); gap: 22px; align-items: start; }
+.leftnav {
+  position: sticky; top: calc(76px + env(safe-area-inset-top, 0px)); max-height: calc(100vh - 92px); overflow-y: auto;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 10px; display: grid; gap: 14px;
+  scrollbar-width: thin;
+}
+.ln-group { display: grid; gap: 2px; }
+.ln-group + .ln-group { border-top: 1px solid var(--line); padding-top: 12px; }
+.ln-group h2 { display: flex; align-items: center; gap: 8px; margin: 2px 0 6px; padding: 0 8px; font: italic 800 19px/1 var(--display); letter-spacing: .01em; }
+.ln-group h2 svg { width: 18px; height: 18px; color: var(--amber); flex: none; }
+.ln-item {
+  display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 10px; align-items: center; width: 100%;
+  border: 0; background: transparent; text-align: left; cursor: pointer; border-radius: 10px; padding: 9px 10px;
+  font: 600 15px/1.15 var(--display); letter-spacing: .01em; color: var(--ink);
+}
+.ln-item .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ln-item .n { font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; font-size: 14px; }
+.ln-item:hover { background: var(--surface-2); }
+.ln-item[aria-current="true"] { background: var(--surface-2); box-shadow: inset 3px 0 0 var(--amber); }
+.ln-item[aria-current="true"] .nm { color: var(--amber-ink); }
+.ln-item .all-ic { width: 22px; height: 22px; border-radius: 6px; background: var(--surface-2); display: grid; place-items: center; color: var(--muted); }
+.ln-item[aria-current="true"] .all-ic { background: var(--amber); color: var(--on-amber); }
+.ln-item .all-ic svg { width: 14px; height: 14px; }
+.ln-item.sub { font: 500 14.5px/1.15 var(--body); color: var(--muted); }
+section[role="tabpanel"] { scroll-margin-top: calc(76px + env(safe-area-inset-top, 0px)); }
+
+.lghead { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1 1 360px; }
+.lghead .ic { width: 30px; height: 20px; }
+.lghead .ic.round { width: 28px; height: 28px; }
+.lghead .all-ic { width: 30px; height: 30px; border-radius: 8px; background: var(--amber); color: var(--on-amber); display: grid; place-items: center; flex: none; }
+.lghead .all-ic svg { width: 18px; height: 18px; }
+.lghead h2 { margin: 0; font: italic 900 30px/1 var(--display); letter-spacing: .005em; }
+.lghead p { margin: 3px 0 0; font-size: 13px; color: var(--muted); }
+
+/* ---------- League chips (phones) + search ---------- */
 .bar { display: flex; gap: 12px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
-.leagues { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 6px; flex: 1 1 520px; min-width: 0; scrollbar-width: thin; }
+.leagues { display: none; gap: 8px; overflow-x: auto; padding: 2px 2px 6px; flex: 1 1 100%; order: 3; min-width: 0; scrollbar-width: thin; }
 .lg {
   display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; cursor: pointer; flex: none;
   border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 7px 12px 7px 8px;
@@ -269,12 +304,22 @@ footer p { margin: 0 0 4px; max-width: 80ch; }
 footer a { color: var(--ink); }
 footer .age { border-color: var(--muted); color: var(--muted); }
 
-@media (max-width: 1060px) {
+@media (max-width: 1320px) {
+  .cols { grid-template-columns: minmax(0, 1fr); }
+  .aside { position: static; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+}
+@media (max-width: 1120px) {
   .stage { grid-template-columns: minmax(0, 1fr); }
   .bigs { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
   .bigs h2 { grid-column: 1 / -1; }
   .cols { grid-template-columns: minmax(0, 1fr); }
   .aside { position: static; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+}
+@media (max-width: 900px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .leftnav { display: none; }
+  .leagues { display: flex; }
+  .lghead h2 { font-size: 24px; }
 }
 @media (max-width: 680px) {
   .top .wrap { gap: 12px; }
@@ -322,7 +367,9 @@ footer .age { border-color: var(--muted); color: var(--muted); }
 </header>
 
 <main class="gut">
-  <div class="wrap">
+  <div class="wrap layout">
+    <nav class="leftnav" id="leftnav" aria-label="Διοργανώσεις"></nav>
+    <div class="mainc">
     <div class="subline">
       <p>Πιθανότητες από στατιστικά μοντέλα για ποδόσφαιρο και μπάσκετ, και οι δίκαιες αποδόσεις που τους αντιστοιχούν.</p>
       <p id="stamp">Φόρτωση δεδομένων…</p>
@@ -337,6 +384,7 @@ footer .age { border-color: var(--muted); color: var(--muted); }
       <div>
         <section id="view-football" role="tabpanel" aria-labelledby="tab-football">
           <div class="bar">
+            <div class="lghead" id="fb-head"></div>
             <div class="leagues" id="fb-leagues" role="group" aria-label="Διοργανώσεις ποδοσφαίρου"></div>
             <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="fb-q" type="search" placeholder="Βρες ομάδα" autocomplete="off" aria-label="Αναζήτηση ομάδας"></label>
           </div>
@@ -344,6 +392,7 @@ footer .age { border-color: var(--muted); color: var(--muted); }
         </section>
         <section id="view-basketball" role="tabpanel" aria-labelledby="tab-basketball" hidden>
           <div class="bar">
+            <div class="lghead" id="bb-head"></div>
             <div class="leagues" id="bb-leagues" role="group" aria-label="Διοργανώσεις μπάσκετ"></div>
             <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="bb-q" type="search" placeholder="Βρες ομάδα" autocomplete="off" aria-label="Αναζήτηση ομάδας"></label>
           </div>
@@ -412,6 +461,7 @@ footer .age { border-color: var(--muted); color: var(--muted); }
           <p>Αν ο τζόγος σού δημιουργεί πρόβλημα: <a href="https://findahelpline.com/el-GR/countries/gr/topics/gambling" target="_blank" rel="noopener">γραμμές υποστήριξης στην Ελλάδα</a>.</p>
         </section>
       </aside>
+    </div>
     </div>
   </div>
 </main>
@@ -720,6 +770,18 @@ footer .age { border-color: var(--muted); color: var(--muted); }
     const host = $(`#${sport === "football" ? "fb" : "bb"}-leagues`);
     const listHost = $(`#${sport === "football" ? "fb" : "bb"}-list`);
     const q = $(`#${sport === "football" ? "fb" : "bb"}-q`);
+    const headHost = $(`#${sport === "football" ? "fb" : "bb"}-head`);
+    function head() {
+      const k = state[sport].league; headHost.textContent = "";
+      let ic;
+      if (k === "all") { ic = el("span", "all-ic"); ic.innerHTML = SPORT_IC[sport]; }
+      else ic = iconEl((list.find(m => m.league === k) || {}).cc || "");
+      const t = el("div");
+      t.append(el("h2", null, k === "all" ? (sport === "football" ? "Όλοι οι αγώνες ποδοσφαίρου" : "Όλοι οι αγώνες μπάσκετ") : k),
+        el("p", null, k === "all" ? `${list.length} αγώνες τις επόμενες μέρες, σε ώρα Ελλάδας.` : ((META[k] || {}).note || "")));
+      headHost.append(ic, t);
+    }
+    function setLeague(k) { state[sport].league = k; store.set("pp-lg-" + sport, k); chips(); head(); draw(); drawNav(); }
     function chips() {
       host.textContent = "";
       [["all", "Όλα", null], ...ls.map(l => [l, l, (list.find(m => m.league === l) || {}).cc])].forEach(([k, label, cc]) => {
@@ -727,7 +789,7 @@ footer .age { border-color: var(--muted); color: var(--muted); }
         const b = el("button", "lg"); b.type = "button"; b.setAttribute("aria-pressed", String(state[sport].league === k));
         if (cc) b.append(iconEl(cc));
         b.append(document.createTextNode(label), el("span", "n", String(n)));
-        b.addEventListener("click", () => { state[sport].league = k; store.set("pp-lg-" + sport, k); chips(); draw(); });
+        b.addEventListener("click", () => setLeague(k));
         host.append(b);
       });
     }
@@ -755,16 +817,58 @@ footer .age { border-color: var(--muted); color: var(--muted); }
       });
     }
     q.addEventListener("input", () => { state[sport].q = q.value; draw(); });
-    chips(); draw();
+    chips(); head(); draw();
     return {
+      list, ls, setLeague,
       reveal(m) {
-        if (state[sport].league !== "all" && state[sport].league !== m.league) { state[sport].league = "all"; chips(); }
+        if (state[sport].league !== "all" && state[sport].league !== m.league) { state[sport].league = "all"; chips(); head(); drawNav(); }
         if (state[sport].q) { state[sport].q = ""; q.value = ""; }
         draw();
         const row = document.getElementById("ev-" + m.id.replace(/[^\w-]/g, "_"));
         if (row) { row._open(); row.classList.remove("flash"); void row.offsetWidth; row.classList.add("flash"); row.scrollIntoView({ behavior: "smooth", block: "center" }); }
       }
     };
+  }
+
+  /* ---------- left navigation ---------- */
+  const SPORT_IC = {
+    football: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="m12 7.2 4.1 3-1.6 4.8h-5l-1.6-4.8z" fill="currentColor" stroke="none"/><path d="M12 7.2V2.6M16.1 10.2l4.4-1.5M14.5 15l2.8 3.8M9.5 15l-2.8 3.8M7.9 10.2 3.5 8.7"/></svg>',
+    basketball: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19M12 2.5v19M5.3 5.3c3.3 3.3 3.3 10.1 0 13.4M18.7 5.3c-3.3 3.3-3.3 10.1 0 13.4"/></svg>',
+  };
+  let currentTab = "football";
+  function drawNav() {
+    const nav = $("#leftnav"); if (!nav) return;
+    nav.textContent = "";
+    [["football", "Ποδόσφαιρο"], ["basketball", "Μπάσκετ"]].forEach(([sp, label]) => {
+      const v = views[sp]; if (!v || !v.list.length) return;
+      const g = el("section", "ln-group"), h = el("h2");
+      h.innerHTML = SPORT_IC[sp]; h.append(document.createTextNode(label)); g.append(h);
+      [["all", "Όλοι οι αγώνες", null], ...v.ls.map(l => [l, l, (v.list.find(m => m.league === l) || {}).cc])].forEach(([k, lab, cc]) => {
+        const b = el("button", "ln-item"); b.type = "button";
+        b.setAttribute("aria-current", String(currentTab === sp && state[sp].league === k));
+        let ic; if (cc) ic = iconEl(cc); else { ic = el("span", "all-ic"); ic.innerHTML = SPORT_IC[sp]; }
+        const n = k === "all" ? v.list.length : v.list.filter(m => m.league === k).length;
+        b.append(ic, el("span", "nm", lab), el("span", "n", String(n)));
+        b.addEventListener("click", () => {
+          const switched = currentTab !== sp;
+          showTab(sp); v.setLeague(k);
+          const sec = $("#view-" + sp), top = sec.getBoundingClientRect().top;
+          if (switched || top < 0 || top > innerHeight * 0.55) sec.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+        g.append(b);
+      });
+      nav.append(g);
+    });
+    const other = el("section", "ln-group");
+    [["tennis", "Τένις"], ["record", "Ιστορικό"], ["method", "Πώς δουλεύει"]].forEach(([tab, lab]) => {
+      if ($("#tab-" + tab).hidden) return;
+      const b = el("button", "ln-item sub"); b.type = "button"; b.setAttribute("aria-current", String(currentTab === tab));
+      const ic = el("span", "all-ic"); ic.textContent = tab === "tennis" ? "T" : tab === "record" ? "✓" : "?";
+      b.append(ic, el("span", "nm", lab), el("span", "n", ""));
+      b.addEventListener("click", () => { showTab(tab); $("#view-" + tab).scrollIntoView({ behavior: "smooth", block: "start" }); });
+      other.append(b);
+    });
+    nav.append(other);
   }
 
   /* ---------- hero ---------- */
@@ -952,6 +1056,7 @@ footer .age { border-color: var(--muted); color: var(--muted); }
     document.querySelectorAll("nav.tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === name)));
     TABS.forEach(t => { $("#view-" + t).hidden = t !== name; });
     store.set("pp-tab", name);
+    currentTab = name; drawNav();
   }
   document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
 
