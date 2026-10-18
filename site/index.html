@@ -5,286 +5,373 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Πόσο Πιθανό</title>
 <meta name="description" content="Πιθανότητες και δίκαιες αποδόσεις για ποδόσφαιρο και μπάσκετ από στατιστικά μοντέλα.">
+<meta name="theme-color" content="#0A1714">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Commissioner:wght@400;500;600;700&family=Literata:opsz,wght@7..72,600;7..72,700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Commissioner:wght@400;500;600;700&family=Fira+Sans+Extra+Condensed:ital,wght@0,500;0,600;0,700;1,700;1,800;1,900&display=swap">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230A1714'/%3E%3Cpath d='M9 24 L23 8' stroke='%23FFB627' stroke-width='3.2' stroke-linecap='round'/%3E%3Ccircle cx='10.5' cy='10.5' r='3.4' fill='none' stroke='%23FFB627' stroke-width='2.6'/%3E%3Ccircle cx='21.5' cy='21.5' r='3.4' fill='none' stroke='%23FFB627' stroke-width='2.6'/%3E%3C/svg%3E">
 <style>
-/* Layout: a single reading column of match "slips", each a probability bar
-   with fair odds; tabs switch sport; details expand in place. */
+/* Floodlit pitch at night: dark turf ground, floodlight-amber for the home side and the brand,
+   sky-blue for the away side. Matchday-poster type (heavy condensed italic) for names and numbers. */
 :root {
-  --bg: #EEF2F0;
-  --surface: #FFFFFF;
-  --sunk: #E3E9E6;
-  --ink: #14201B;
-  --muted: #5A6A63;
-  --line: #D3DCD8;
-  --home: #136B52;
-  --draw: #A3AFA9;
-  --away: #87346A;
-  --pos: #1D7A3D;
-  --neg: #A93A2D;
-  --focus: #1F5FD1;
-  --heat: 19 107 82;           /* rgb triplet of --home for the score grid */
-  --display: "Literata", Georgia, "Times New Roman", serif;
+  --bg: #0A1714;          /* turf at night */
+  --surface: #0F211C;
+  --surface-2: #15302A;
+  --line: #20413A;
+  --ink: #EAF2EE;
+  --muted: #8FA89E;
+  --amber: #FFB627;       /* floodlight: brand + "1" */
+  --amber-ink: #FFC756;
+  --draw: #58736A;        /* "X" */
+  --sky: #5AB4FF;         /* "2" */
+  --pos: #4FD18B;
+  --neg: #FF7A6B;
+  --on-amber: #1A1200;
+  --heat: 255 182 39;
+  --hdr: #06100D;
+  --display: "Fira Sans Extra Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
   --body: "Commissioner", "Segoe UI", system-ui, sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0E1412; --surface: #151E1B; --sunk: #1C2723; --ink: #E4EBE8; --muted: #92A29B;
-    --line: #283430; --home: #44B88F; --draw: #5F6E67; --away: #D57AB2; --pos: #5CC77E;
-    --neg: #EE7F6E; --focus: #7AA7FF; --heat: 68 184 143; color-scheme: dark;
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #EEF3EF; --surface: #FFFFFF; --surface-2: #E4ECE6; --line: #CFDCD3; --ink: #0E1F1A; --muted: #567066;
+    --amber: #E89A00; --amber-ink: #8A5A00; --draw: #A7B8AF; --sky: #1F7AD1; --pos: #17803F; --neg: #C2412E;
+    --on-amber: #1A1200; --heat: 232 154 0; --hdr: #06100D; color-scheme: light;
   }
 }
-:root[data-theme="dark"] {
-  --bg: #0E1412; --surface: #151E1B; --sunk: #1C2723; --ink: #E4EBE8; --muted: #92A29B;
-  --line: #283430; --home: #44B88F; --draw: #5F6E67; --away: #D57AB2; --pos: #5CC77E;
-  --neg: #EE7F6E; --focus: #7AA7FF; --heat: 68 184 143; color-scheme: dark;
-}
-
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
-img { max-width: 100%; }
-body {
-  margin: 0;
-  background: var(--bg); color: var(--ink);
-  font-family: var(--body); font-size: 15px; line-height: 1.5;
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
-}
-.wrap { max-width: 860px; margin: 0 auto; padding-block: 28px 56px; display: grid; gap: 22px; }
-.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
-button, select, input { font: inherit; color: inherit; }
-:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--body); }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; border-radius: 6px; }
+.num { font-family: var(--display); font-variant-numeric: tabular-nums; }
+.gut { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 1200px; margin: 0 auto; }
 
-/* Masthead */
-header.mast { display: grid; gap: 8px; }
-.brand { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-.brand h1 { font-family: var(--display); font-size: clamp(30px, 6vw, 44px); line-height: 1.05; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
-.brand .pct { font-family: var(--mono); font-size: 13px; color: var(--muted); }
-.lede { margin: 0; color: var(--muted); max-width: 62ch; }
-.stamp { font-size: 12.5px; color: var(--muted); display: flex; gap: 6px 14px; flex-wrap: wrap; }
-.stamp b { color: var(--ink); font-weight: 600; }
-
-/* Tabs */
-nav.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+/* ---------- Top bar (always dark, like a stadium screen) ---------- */
+.top { background: var(--hdr); position: sticky; top: 0; z-index: 10; border-bottom: 1px solid #1B302A; padding-top: env(safe-area-inset-top, 0px); }
+.top .wrap { display: flex; align-items: center; gap: 22px; min-height: 60px; }
+.brand { display: flex; align-items: center; gap: 10px; color: #F3F7F5; text-decoration: none; flex: none; }
+.brand svg { width: 30px; height: 30px; }
+.brand b { font: italic 900 25px/1 var(--display); letter-spacing: 0.01em; }
+nav.tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; flex: 1; }
+nav.tabs::-webkit-scrollbar { display: none; }
 nav.tabs button {
-  border: 0; background: none; padding: 10px 14px; cursor: pointer; white-space: nowrap;
-  color: var(--muted); font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -1px;
+  border: 0; background: none; cursor: pointer; white-space: nowrap; color: #9DB3AA;
+  font: 600 16px/1 var(--display); letter-spacing: 0.02em; padding: 21px 12px 19px; border-bottom: 3px solid transparent;
 }
-nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
-nav.tabs button:hover { color: var(--ink); }
+nav.tabs button:hover { color: #F3F7F5; }
+nav.tabs button[aria-selected="true"] { color: #F3F7F5; border-bottom-color: #FFB627; }
+.age { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; border: 2px solid #F3F7F5; color: #F3F7F5; font: 700 13px/1 var(--display); }
 
-/* League tabs */
-.leagues { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: thin; }
-.lt {
-  display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; cursor: pointer;
-  border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 12px;
-  font-weight: 600; font-size: 13.5px;
+main { padding-block: 22px 40px; }
+.subline { display: flex; justify-content: space-between; align-items: baseline; gap: 6px 18px; flex-wrap: wrap; margin-bottom: 14px; color: var(--muted); font-size: 13.5px; }
+.subline p { margin: 0; }
+.subline b { color: var(--ink); font-weight: 600; }
+
+/* ---------- Hero: the match of the day ---------- */
+.stage { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; margin-bottom: 26px; }
+.hero {
+  position: relative; overflow: hidden; border-radius: 18px; padding: 22px 26px 24px; color: #F3F7F5; isolation: isolate;
+  background:
+    radial-gradient(120% 90% at 50% -20%, rgba(255, 182, 39, .28), transparent 60%),
+    repeating-linear-gradient(90deg, #0F2A22 0 64px, #12301F 64px 128px),
+    #0E241D;
+  min-height: 360px; display: grid; grid-template-rows: auto 1fr auto auto auto; gap: 16px;
 }
-.lt .cc { font-family: var(--mono); font-size: 10.5px; font-weight: 600; color: var(--muted); border: 1px solid var(--line); border-radius: 3px; padding: 0 4px; }
-.lt .n { font-family: var(--mono); font-size: 12px; color: var(--muted); font-weight: 400; }
-.lt[aria-selected="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-.lt[aria-selected="true"] .cc, .lt[aria-selected="true"] .n { color: var(--bg); border-color: currentColor; }
-.lt:hover { border-color: var(--ink); }
-.subhead { display: flex; justify-content: space-between; align-items: center; gap: 8px 16px; flex-wrap: wrap; }
-.subhead p { margin: 0; font-size: 12.5px; color: var(--muted); max-width: 60ch; }
+.hero.bb { background:
+    radial-gradient(120% 90% at 50% -20%, rgba(255, 182, 39, .26), transparent 60%),
+    linear-gradient(160deg, #3A2414, #22160E 60%, #18110B); }
+.hero .lines { position: absolute; inset: 0; z-index: -1; opacity: .16; pointer-events: none; }
+.hero .lines svg { width: 100%; height: 100%; }
+.hero-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chip-lg { display: inline-flex; align-items: center; gap: 8px; background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.14); border-radius: 999px; padding: 5px 12px 5px 6px; font: 600 15px/1 var(--display); letter-spacing: .02em; }
+.when-lg { font: 700 16px/1 var(--display); letter-spacing: .02em; background: #FFB627; color: #1A1200; border-radius: 8px; padding: 6px 10px; }
+.duel { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 14px; }
+.side { display: grid; justify-items: start; gap: 10px; min-width: 0; }
+.side.r { justify-items: end; text-align: right; }
+.side .nm { font: italic 900 clamp(26px, 4.4vw, 50px)/0.95 var(--display); letter-spacing: -0.005em; text-wrap: balance; overflow-wrap: break-word; max-width: 100%; }
+.vs { font: italic 800 22px/1 var(--display); color: rgba(255,255,255,.55); }
+.hero .pbar { height: 14px; border-radius: 4px; }
+.hero .plabels { display: flex; justify-content: space-between; font: 600 14px/1 var(--display); color: rgba(255,255,255,.8); margin-top: -8px; }
+.hero .odds { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 560px; }
+.hero .odds.two { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 380px; }
+.hero .odd { background: rgba(0,0,0,.42); border-color: rgba(255,255,255,.16); color: #F3F7F5; padding: 10px 14px; }
+.hero .odd .v { font-size: 26px; }
+.hero .odd.best { background: #FFB627; border-color: #FFB627; color: #1A1200; }
+.hero .odd .k, .hero .odd .p { color: rgba(255,255,255,.66); }
+.hero .odd.best .v { color: #1A1200; }
+.hero .odd.best .k, .hero .odd.best .p { color: #4A3300; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 13.5px; color: rgba(255,255,255,.78); align-items: center; }
+.facts b { font: 700 17px/1 var(--display); color: #F3F7F5; margin-left: 4px; }
+.facts .go { margin-left: auto; }
+.btn-ghost { border: 1px solid rgba(255,255,255,.35); background: transparent; color: #F3F7F5; border-radius: 10px; padding: 8px 14px; font: 600 15px/1 var(--display); letter-spacing: .02em; cursor: pointer; }
+.btn-ghost:hover { background: rgba(255,255,255,.1); }
 
-/* Filters */
-.filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.chip {
-  border: 1px solid var(--line); background: var(--surface); border-radius: 999px;
-  padding: 5px 12px; font-size: 13px; cursor: pointer; font-weight: 500;
+.bigs { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 16px; display: grid; align-content: start; gap: 10px; }
+.bigs h2, .panel h2, .card h2 { margin: 0 0 2px; font: italic 800 22px/1.1 var(--display); letter-spacing: .005em; }
+.big {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; text-align: left;
+  width: 100%; border: 1px solid var(--line); background: var(--surface-2); border-radius: 12px; padding: 10px 12px; cursor: pointer;
 }
-.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-.legend { margin-left: auto; display: flex; gap: 12px; font-size: 12px; color: var(--muted); }
-.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.big:hover { border-color: var(--amber); }
+.big[aria-current="true"] { border-color: var(--amber); box-shadow: inset 3px 0 0 var(--amber); }
+.big .bt { min-width: 0; }
+.big .bt b { display: block; font: 700 16.5px/1.15 var(--display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.big .bt span { font-size: 12px; color: var(--muted); }
+.big .bp { font: 800 italic 20px/1 var(--display); color: var(--amber-ink); text-align: right; }
+.big .bp small { display: block; font: 500 11px/1.2 var(--body); color: var(--muted); font-style: normal; }
 
-/* Day groups */
-.day { display: grid; gap: 10px; }
-.day h2 {
-  font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted);
-  margin: 6px 0 0; font-weight: 600;
+/* ---------- Monogram crest ---------- */
+.mono {
+  --h: 150; flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%;
+  background: hsl(var(--h) 52% 38%); color: #fff; font: 800 11.5px/1 var(--display); letter-spacing: .02em;
+  box-shadow: inset 0 0 0 2px hsl(var(--h) 60% 62% / .55);
 }
+.mono.xl { width: 74px; height: 74px; font-size: 26px; box-shadow: inset 0 0 0 4px hsl(var(--h) 60% 62% / .6), 0 10px 30px rgba(0,0,0,.35); }
+.mono.sm { width: 26px; height: 26px; font-size: 10px; }
 
-/* Match slip */
-.slip { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
-.slip-main { display: grid; grid-template-columns: 64px minmax(0, 1fr) 150px; gap: 14px; padding: 14px 16px; align-items: center; }
-.when { display: grid; gap: 2px; }
-.when .t { font-family: var(--mono); font-weight: 600; font-size: 15px; }
-.when .lg { font-size: 11px; color: var(--muted); line-height: 1.25; }
-.core { min-width: 0; display: grid; gap: 8px; }
-.teams { display: flex; justify-content: space-between; gap: 10px; font-weight: 600; font-size: 15.5px; }
-.teams span { min-width: 0; overflow-wrap: anywhere; }
-.teams .a { text-align: right; }
-.bar { display: flex; height: 10px; border-radius: 3px; overflow: hidden; gap: 2px; background: var(--sunk); }
-.bar > div { height: 100%; }
-.bar .h { background: var(--home); } .bar .d { background: var(--draw); } .bar .w { background: var(--away); }
-.odds3 { display: grid; grid-template-columns: repeat(3, 1fr); font-size: 12.5px; color: var(--muted); }
-.odds3 > div:nth-child(2) { text-align: center; } .odds3 > div:nth-child(3) { text-align: right; }
-.odds3 strong { color: var(--ink); font-family: var(--mono); font-weight: 600; font-size: 14px; }
-.odds3 .fo { font-family: var(--mono); }
-.side { display: grid; gap: 6px; font-size: 12.5px; }
-.kv { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); }
-.kv b { color: var(--ink); font-family: var(--mono); font-weight: 600; }
-.lean {
-  display: inline-flex; gap: 6px; align-items: center; justify-self: start;
-  font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 4px;
-  background: var(--sunk); color: var(--ink);
+/* ---------- Probability bar and odds boxes ---------- */
+.pbar { display: flex; gap: 2px; height: 6px; border-radius: 3px; overflow: hidden; }
+.pbar i { display: block; height: 100%; }
+.pbar .h { background: var(--amber); } .pbar .d { background: var(--draw); } .pbar .a { background: var(--sky); }
+.odds { display: grid; grid-template-columns: repeat(3, 76px); gap: 6px; }
+.odds.two { grid-template-columns: repeat(2, 76px); }
+.odd { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; align-items: baseline; column-gap: 8px;
+  border: 1px solid var(--line); background: var(--surface-2); border-radius: 10px; padding: 7px 10px; }
+.odd .k { grid-row: 1 / 3; align-self: center; font: 700 14px/1 var(--display); color: var(--muted); }
+.odd .v { font: 800 20px/1 var(--display); font-variant-numeric: tabular-nums; text-align: right; }
+.odd .p { font: 600 12px/1.2 var(--display); color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.odd.best { border-color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber); }
+.odd.best .v { color: var(--amber-ink); }
+
+/* ---------- League chips + search ---------- */
+.bar { display: flex; gap: 12px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+.leagues { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 6px; flex: 1 1 520px; min-width: 0; scrollbar-width: thin; }
+.lg {
+  display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; cursor: pointer; flex: none;
+  border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 7px 12px 7px 8px;
+  font: 600 15px/1 var(--display); letter-spacing: .02em;
 }
-.lean.strong { background: var(--home); color: var(--surface); }
-.slip-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; padding: 0 16px 12px 94px; }
-.toggle { border: 0; background: none; color: var(--muted); font-size: 13px; cursor: pointer; padding: 4px 0; font-weight: 600; }
-.toggle:hover { color: var(--ink); }
-.result-tag { font-size: 12px; font-family: var(--mono); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--line); }
-.result-tag.hit { color: var(--pos); border-color: currentColor; }
-.result-tag.miss { color: var(--neg); border-color: currentColor; }
+.lg .n { font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; }
+.lg:hover { border-color: var(--amber); }
+.lg[aria-pressed="true"] { background: var(--amber); border-color: var(--amber); color: var(--on-amber); }
+.lg[aria-pressed="true"] .n { color: #4A3300; }
+.ic { width: 22px; height: 15px; border-radius: 3px; overflow: hidden; flex: none; display: block; box-shadow: 0 0 0 1px rgba(0,0,0,.25); }
+.ic.round { width: 20px; height: 20px; border-radius: 50%; box-shadow: none; }
+.search { flex: 0 1 240px; position: relative; }
+.search input { width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 9px 12px 9px 34px; }
+.search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--muted); }
 
-/* Details */
-.detail { border-top: 1px solid var(--line); background: var(--sunk); padding: 16px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 22px; }
-.detail h3 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); font-weight: 600; }
+/* ---------- Layout with sidebar ---------- */
+.cols { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; align-items: start; }
+.aside { display: grid; gap: 14px; position: sticky; top: calc(76px + env(safe-area-inset-top, 0px)); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: grid; gap: 10px; }
+.card p { margin: 0; color: var(--muted); font-size: 13.5px; }
+.sure { display: grid; gap: 2px; }
+.sure > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
+.sure > div:first-child { border-top: 0; }
+.sure b { font: 700 15.5px/1.2 var(--display); display: block; }
+.sure span { font-size: 12px; color: var(--muted); }
+.sure strong { font: italic 800 20px/1 var(--display); color: var(--amber-ink); text-align: right; }
+.sure strong small { display: block; font: 500 11px/1.2 var(--body); font-style: normal; color: var(--muted); }
+.rg { border-color: transparent; background: var(--surface-2); }
+.rg-head { display: flex; gap: 10px; align-items: center; }
+.rg-head .age { border-color: var(--ink); color: var(--ink); }
+.rg a { color: var(--ink); }
+
+/* ---------- Event rows ---------- */
+.day { display: grid; gap: 8px; margin-bottom: 22px; }
+.day h3 { margin: 0 0 2px; font: italic 800 20px/1.1 var(--display); letter-spacing: .01em; }
+.day h3 span { font: 500 14px/1 var(--body); font-style: normal; color: var(--muted); margin-left: 8px; }
+.ev { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.ev.flash { animation: flash 1.6s ease; }
+@keyframes flash { 0%, 40% { border-color: var(--amber); box-shadow: 0 0 0 3px rgb(var(--heat) / .35); } }
+.ev-main { display: grid; grid-template-columns: 78px minmax(0, 1fr) auto 36px; gap: 14px; align-items: center; padding: 12px 12px 12px 16px; }
+.ev-time b { display: block; font: 800 20px/1 var(--display); font-variant-numeric: tabular-nums; }
+.ev-time span { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 11.5px; color: var(--muted); line-height: 1.2; }
+.ev-time .ic { width: 16px; height: 11px; }
+.ev-time .ic.round { width: 14px; height: 14px; }
+.ev-teams { display: grid; gap: 6px; min-width: 0; }
+.tm { display: flex; align-items: center; gap: 9px; min-width: 0; font: 700 17px/1.15 var(--display); }
+.tm span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ev-teams .pbar { margin-top: 3px; max-width: 320px; }
+.more { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--line); background: transparent; cursor: pointer; display: grid; place-items: center; color: var(--muted); }
+.more:hover { color: var(--ink); border-color: var(--amber); }
+.more svg { width: 16px; height: 16px; transition: transform .2s ease; }
+.more[aria-expanded="true"] svg { transform: rotate(180deg); }
+.spread { display: flex; gap: 14px; font: 600 13px/1 var(--display); color: var(--muted); margin-top: 2px; }
+
+.detail { border-top: 1px solid var(--line); background: var(--surface-2); padding: 16px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 22px; }
+.detail.one { grid-template-columns: minmax(0, 1fr); }
+.detail h4 { margin: 0 0 8px; font: 700 15px/1.2 var(--display); letter-spacing: .02em; color: var(--muted); }
 .grid-wrap { overflow-x: auto; }
-table.sm { border-collapse: separate; border-spacing: 2px; font-family: var(--mono); font-size: 11.5px; }
-table.sm th { color: var(--muted); font-weight: 400; padding: 2px 4px; }
-table.sm td { width: 40px; height: 28px; text-align: center; border-radius: 3px; color: var(--ink); }
-table.sm td.hot { color: var(--surface); font-weight: 600; }
-.axis { font-size: 11px; color: var(--muted); margin-top: 4px; }
-.mkts { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
-.mk { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; display: grid; gap: 1px; }
-.mk span { font-size: 11.5px; color: var(--muted); }
-.mk b { font-family: var(--mono); font-size: 15px; }
-.mk small { font-family: var(--mono); font-size: 11px; color: var(--muted); }
-.value { display: grid; gap: 8px; margin-top: 14px; }
-.value-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.value label { display: grid; gap: 3px; font-size: 11.5px; color: var(--muted); }
-.value input {
-  width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 6px;
-  padding: 6px 8px; font-family: var(--mono); font-size: 14px;
-}
-.ev { font-family: var(--mono); font-size: 12px; min-height: 1.4em; }
-.ev.pos { color: var(--pos); } .ev.neg { color: var(--neg); }
-.hint { font-size: 12px; color: var(--muted); margin: 0; }
+table.sg { border-collapse: separate; border-spacing: 2px; font: 600 12.5px/1 var(--display); font-variant-numeric: tabular-nums; }
+table.sg th { color: var(--muted); font-weight: 600; padding: 2px 5px; }
+table.sg td { width: 42px; height: 30px; text-align: center; border-radius: 5px; }
+table.sg td.hot { color: var(--on-amber); font-weight: 800; }
+.axis { font-size: 11.5px; color: var(--muted); margin-top: 6px; max-width: 290px; }
+.mkts { display: grid; grid-template-columns: repeat(auto-fill, minmax(116px, 1fr)); gap: 8px; }
+.mk { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; display: grid; gap: 2px; }
+.mk span { font-size: 12px; color: var(--muted); line-height: 1.25; }
+.mk b { font: 800 19px/1 var(--display); font-variant-numeric: tabular-nums; }
+.mk small { font: 600 12px/1 var(--display); color: var(--muted); }
+.calc { display: grid; gap: 8px; margin-top: 16px; }
+.calc-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.calc-row.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.calc label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+.calc input { width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 9px; font: 700 17px/1 var(--display); font-variant-numeric: tabular-nums; }
+.ev-val { font: 700 13px/1.2 var(--display); min-height: 1.2em; }
+.ev-val.pos { color: var(--pos); } .ev-val.neg { color: var(--neg); }
+.hint { margin: 0; font-size: 12.5px; color: var(--muted); }
 
-/* Tennis */
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 16px; }
-.duel { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; align-items: end; }
-.duel label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); min-width: 0; }
-.duel select { width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); font-weight: 600; }
-.vs { font-family: var(--display); font-size: 20px; color: var(--muted); padding-bottom: 6px; }
-.surfaces { display: flex; gap: 6px; flex-wrap: wrap; }
-.big { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.big > div { display: grid; gap: 2px; }
-.big > div:last-child { text-align: right; }
-.big .p { font-family: var(--display); font-size: clamp(30px, 7vw, 42px); line-height: 1; }
-.big .p.h { color: var(--home); } .big .p.w { color: var(--away); }
-.big small { color: var(--muted); font-size: 12.5px; }
-.bar.two { height: 12px; }
-.elo-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
-.elo-tbl th, .elo-tbl td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: right; }
-.elo-tbl th:first-child, .elo-tbl td:first-child { text-align: left; }
-.elo-tbl th { font-size: 11.5px; color: var(--muted); font-weight: 600; }
-.elo-tbl td { font-family: var(--mono); }
-.elo-tbl td:first-child { font-family: var(--body); font-weight: 500; }
+.empty { border: 1px dashed var(--line); border-radius: 16px; padding: 26px; display: grid; gap: 6px; background: var(--surface); }
+.empty h3 { margin: 0; font: italic 800 22px/1.15 var(--display); }
+.empty p { margin: 0; color: var(--muted); max-width: 62ch; }
 
-/* Record */
-.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
-.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 2px; }
-.tile span { font-size: 12px; color: var(--muted); }
-.tile b { font-family: var(--display); font-size: 30px; line-height: 1.1; }
+/* ---------- Tennis / record / method ---------- */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: grid; gap: 16px; }
+.pick { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; align-items: end; }
+.pick label { display: grid; gap: 4px; font-size: 12.5px; color: var(--muted); min-width: 0; }
+.pick select { width: 100%; padding: 9px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); font: 700 16px/1.2 var(--display); }
+.pick .vs { color: var(--muted); padding-bottom: 9px; }
+.surfs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tbig { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tbig > div:last-child { text-align: right; }
+.tbig .p { font: italic 900 clamp(38px, 7vw, 58px)/1 var(--display); }
+.tbig .p.h { color: var(--amber-ink); } .tbig .p.a { color: var(--sky); }
+.tbig small { display: block; color: var(--muted); font-size: 13px; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tbl th, .tbl td { padding: 8px; border-bottom: 1px solid var(--line); text-align: right; }
+.tbl th { font: 600 13px/1.2 var(--display); color: var(--muted); letter-spacing: .02em; }
+.tbl th:first-child, .tbl td:first-child { text-align: left; }
+.tbl td { font: 600 16px/1.2 var(--display); font-variant-numeric: tabular-nums; }
+.tbl td.t { font: 500 14px/1.3 var(--body); text-align: left; }
+.tbl td.t small { display: block; color: var(--muted); font-size: 11.5px; }
+.tbl td.ok { color: var(--pos); } .tbl td.no { color: var(--neg); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: grid; gap: 2px; }
+.tile span { font-size: 12.5px; color: var(--muted); }
+.tile b { font: italic 900 38px/1 var(--display); }
 .tile small { font-size: 12px; color: var(--muted); }
-.empty { background: var(--surface); border: 1px dashed var(--line); border-radius: 10px; padding: 22px; display: grid; gap: 6px; }
-.empty h3 { margin: 0; font-family: var(--display); font-size: 20px; }
-.empty p { margin: 0; color: var(--muted); max-width: 60ch; }
-
-.rec td small { display: block; color: var(--muted); font-size: 11px; font-family: var(--body); }
-.rec td:nth-child(2) { font-family: var(--body); text-align: left; }
-.rec th:nth-child(2) { text-align: left; }
-.rec td.ok { color: var(--pos); font-weight: 700; } .rec td.no { color: var(--neg); font-weight: 700; }
-
-/* Method */
-.prose { display: grid; gap: 14px; max-width: 68ch; }
-.prose h3 { font-family: var(--display); font-size: 20px; margin: 8px 0 0; }
+.prose { max-width: 70ch; display: grid; gap: 14px; }
+.prose h3 { margin: 10px 0 0; font: italic 800 26px/1.1 var(--display); }
 .prose p { margin: 0; }
-.formula { font-family: var(--mono); font-size: 13px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; overflow-x: auto; white-space: nowrap; }
-.prose a { color: var(--home); }
+.prose a { color: var(--amber-ink); }
+.formula { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; overflow-x: auto; white-space: nowrap; font: 600 16px/1.4 var(--display); }
 
-footer.rg { border-top: 1px solid var(--line); padding-top: 16px; font-size: 12.5px; color: var(--muted); display: grid; gap: 6px; }
-footer.rg strong { color: var(--ink); }
-.badge18 { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--ink); color: var(--ink); font-weight: 700; font-size: 12px; margin-right: 8px; vertical-align: middle; }
-footer.rg a { color: inherit; }
+footer { border-top: 1px solid var(--line); padding-block: 22px 36px; color: var(--muted); font-size: 13px; }
+footer .wrap { display: flex; gap: 14px; align-items: flex-start; }
+footer p { margin: 0 0 4px; max-width: 80ch; }
+footer a { color: var(--ink); }
+footer .age { border-color: var(--muted); color: var(--muted); }
 
-@media (max-width: 640px) {
-  .slip-main { grid-template-columns: minmax(0, 1fr); gap: 10px; }
-  .when { grid-auto-flow: column; justify-content: start; gap: 10px; align-items: baseline; }
-  .side { grid-template-columns: repeat(3, auto); justify-content: space-between; }
-  .side .kv { display: grid; gap: 0; }
-  .slip-foot { padding-left: 16px; }
-  .detail { grid-template-columns: minmax(0, 1fr); }
-  .legend { margin-left: 0; width: 100%; }
+@media (max-width: 1060px) {
+  .stage { grid-template-columns: minmax(0, 1fr); }
+  .bigs { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+  .bigs h2 { grid-column: 1 / -1; }
+  .cols { grid-template-columns: minmax(0, 1fr); }
+  .aside { position: static; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
 }
-@media (prefers-reduced-motion: no-preference) {
-  .bar > div { transition: flex-basis .35s ease; }
+@media (max-width: 680px) {
+  .top .wrap { gap: 12px; }
+  .brand b { display: none; }
+  nav.tabs button { padding: 20px 9px 18px; font-size: 15px; }
+  .hero { padding: 18px 16px 18px; min-height: 0; gap: 14px; }
+  .mono.xl { width: 52px; height: 52px; font-size: 18px; }
+  .side .nm { font-size: clamp(22px, 7vw, 32px); }
+  .facts .go { margin-left: 0; width: 100%; }
+  .facts .go .btn-ghost { width: 100%; }
+  .ev-main { grid-template-columns: minmax(0, 1fr) 36px; grid-template-areas: "time more" "teams teams" "odds odds"; gap: 10px; padding: 12px; }
+  .ev-time { grid-area: time; display: flex; gap: 10px; align-items: center; }
+  .ev-time span { margin-top: 0; }
+  .ev-teams { grid-area: teams; }
+  .ev-odds { grid-area: odds; }
+  .ev-main .more { grid-area: more; }
+  .odds, .odds.two { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .odds.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .detail { grid-template-columns: minmax(0, 1fr); }
+  .search { flex: 1 1 100%; }
+  .pick { grid-template-columns: minmax(0, 1fr); }
+  .pick .vs { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="mast">
-    <div class="brand"><h1>Πόσο Πιθανό</h1><span class="pct">P(1) + P(X) + P(2) = 100%</span></div>
-    <p class="lede">Πιθανότητες για τα μεγάλα πρωταθλήματα ποδοσφαίρου και μπάσκετ από στατιστικά μοντέλα, με τις δίκαιες αποδόσεις που αντιστοιχούν. Χωρίς ένστικτο, χωρίς «σίγουρα».</p>
-    <div class="stamp" id="stamp"></div>
-  </header>
+<header class="top gut">
+  <div class="wrap">
+    <a class="brand" href="./" aria-label="Πόσο Πιθανό, αρχική">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#FFB627"/><path d="M9.5 23.5 22.5 8.5" stroke="#1A1200" stroke-width="3.2" stroke-linecap="round"/><circle cx="10.8" cy="10.8" r="3.3" fill="none" stroke="#1A1200" stroke-width="2.6"/><circle cx="21.2" cy="21.2" r="3.3" fill="none" stroke="#1A1200" stroke-width="2.6"/></svg>
+      <b>Πόσο Πιθανό</b>
+    </a>
+    <nav class="tabs" role="tablist" aria-label="Ενότητες">
+      <button role="tab" id="tab-football" data-tab="football" aria-selected="true">Ποδόσφαιρο</button>
+      <button role="tab" id="tab-basketball" data-tab="basketball" aria-selected="false">Μπάσκετ</button>
+      <button role="tab" id="tab-tennis" data-tab="tennis" aria-selected="false">Τένις</button>
+      <button role="tab" id="tab-record" data-tab="record" aria-selected="false">Ιστορικό</button>
+      <button role="tab" id="tab-method" data-tab="method" aria-selected="false">Πώς δουλεύει</button>
+    </nav>
+    <span class="age" title="Μόνο για ενήλικες">18+</span>
+  </div>
+</header>
 
-  <nav class="tabs" role="tablist" aria-label="Ενότητες">
-    <button role="tab" id="tab-football" aria-selected="true" data-tab="football">Ποδόσφαιρο</button>
-    <button role="tab" id="tab-basketball" aria-selected="false" data-tab="basketball">Μπάσκετ</button>
-    <button role="tab" id="tab-tennis" aria-selected="false" data-tab="tennis">Τένις</button>
-    <button role="tab" id="tab-record" aria-selected="false" data-tab="record">Ιστορικό</button>
-    <button role="tab" id="tab-method" aria-selected="false" data-tab="method">Μεθοδολογία</button>
-  </nav>
-
-  <section id="view-football" role="tabpanel" aria-labelledby="tab-football">
-    <div style="display:grid;gap:14px">
-      <div class="leagues" id="fb-leagues" role="tablist" aria-label="Πρωταθλήματα ποδοσφαίρου"></div>
-      <div class="subhead"><p id="fb-note"></p><div class="legend" id="fb-legend"></div></div>
-      <div id="fb-list" style="display:grid;gap:18px"></div>
+<main class="gut">
+  <div class="wrap">
+    <div class="subline">
+      <p>Πιθανότητες από στατιστικά μοντέλα για ποδόσφαιρο και μπάσκετ, και οι δίκαιες αποδόσεις που τους αντιστοιχούν.</p>
+      <p id="stamp">Φόρτωση δεδομένων…</p>
     </div>
-  </section>
 
-  <section id="view-basketball" role="tabpanel" aria-labelledby="tab-basketball" hidden>
-    <div style="display:grid;gap:14px">
-      <div class="leagues" id="bb-leagues" role="tablist" aria-label="Πρωταθλήματα μπάσκετ"></div>
-      <div class="subhead"><p id="bb-note"></p></div>
-      <div id="bb-list" style="display:grid;gap:18px"></div>
-    </div>
-  </section>
+    <section class="stage" id="stage" hidden>
+      <article class="hero" id="hero" aria-live="polite"></article>
+      <aside class="bigs" id="bigs" aria-label="Μεγάλοι αγώνες"></aside>
+    </section>
 
-  <section id="view-tennis" role="tabpanel" aria-labelledby="tab-tennis" hidden>
-    <div style="display:grid;gap:16px">
-      <div class="panel">
-        <div class="duel">
-          <label for="pA">Παίκτης Α<select id="pA"></select></label>
-          <span class="vs">εναντίον</span>
-          <label for="pB">Παίκτης Β<select id="pB"></select></label>
-        </div>
-        <div class="surfaces" id="surfaces" role="group" aria-label="Επιφάνεια"></div>
-        <div id="duel-out" style="display:grid;gap:10px"></div>
-      </div>
-      <div class="panel" style="gap:10px">
-        <h3 style="margin:0;font-family:var(--display);font-size:19px">Βαθμολογίες Elo</h3>
-        <p class="hint" id="elo-note"></p>
-        <div style="overflow-x:auto"><table class="elo-tbl" id="elo-tbl"></table></div>
-      </div>
-    </div>
-  </section>
-
-  <section id="view-record" role="tabpanel" aria-labelledby="tab-record" hidden>
-    <div id="record" style="display:grid;gap:16px"></div>
-  </section>
-
-  <section id="view-method" role="tabpanel" aria-labelledby="tab-method" hidden>
-    <div class="prose">
+    <div class="cols">
+      <div>
+        <section id="view-football" role="tabpanel" aria-labelledby="tab-football">
+          <div class="bar">
+            <div class="leagues" id="fb-leagues" role="group" aria-label="Διοργανώσεις ποδοσφαίρου"></div>
+            <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="fb-q" type="search" placeholder="Βρες ομάδα" autocomplete="off" aria-label="Αναζήτηση ομάδας"></label>
+          </div>
+          <div id="fb-list"></div>
+        </section>
+        <section id="view-basketball" role="tabpanel" aria-labelledby="tab-basketball" hidden>
+          <div class="bar">
+            <div class="leagues" id="bb-leagues" role="group" aria-label="Διοργανώσεις μπάσκετ"></div>
+            <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="bb-q" type="search" placeholder="Βρες ομάδα" autocomplete="off" aria-label="Αναζήτηση ομάδας"></label>
+          </div>
+          <div id="bb-list"></div>
+        </section>
+        <section id="view-tennis" role="tabpanel" aria-labelledby="tab-tennis" hidden>
+          <div style="display:grid;gap:16px">
+            <div class="panel">
+              <h2 style="margin:0;font:italic 800 26px/1.1 var(--display)">Ποιος κερδίζει;</h2>
+              <div class="pick">
+                <label for="pA">Παίκτης Α<select id="pA"></select></label>
+                <span class="vs">εναντίον</span>
+                <label for="pB">Παίκτης Β<select id="pB"></select></label>
+              </div>
+              <div class="surfs" id="surfs" role="group" aria-label="Επιφάνεια"></div>
+              <div id="duel-out" style="display:grid;gap:12px"></div>
+            </div>
+            <div class="panel" style="gap:10px">
+              <h2 style="margin:0;font:italic 800 22px/1.1 var(--display)">Βαθμολογίες Elo</h2>
+              <p class="hint" id="elo-note"></p>
+              <div style="overflow-x:auto"><table class="tbl" id="elo-tbl"></table></div>
+            </div>
+          </div>
+        </section>
+        <section id="view-record" role="tabpanel" aria-labelledby="tab-record" hidden>
+          <div id="record" style="display:grid;gap:16px"></div>
+        </section>
+        <section id="view-method" role="tabpanel" aria-labelledby="tab-method" hidden>
+          <div class="prose">
       <h3>Ποδόσφαιρο: μοντέλο Poisson</h3>
       <p>Κάθε ομάδα παίρνει έναν δείκτη επίθεσης (πόσα γκολ βάζει σε σχέση με τον μέσο όρο) και έναν δείκτη άμυνας (πόσα δέχεται). Από αυτούς βγαίνουν τα αναμενόμενα γκολ κάθε πλευράς, λ για τον γηπεδούχο και μ για τον φιλοξενούμενο.</p>
       <p>Οι δείκτες υπολογίζονται μαζί για 30 περίπου πρωταθλήματα και τα τρία ευρωπαϊκά κύπελλα. Οι ευρωπαϊκοί αγώνες λειτουργούν σαν γέφυρα: αν οι ελληνικές ομάδες τα πάνε καλά απέναντι σε ομάδες άλλων χωρών, ανεβαίνει όλη η κλίμακα της Super League. Γι' αυτό μπορεί να υπολογιστεί και ένας αγώνας όπως ΑΕΚ–Man City.</p>
@@ -303,50 +390,73 @@ footer.rg a { color: inherit; }
       <p>Δίκαιη απόδοση είναι 1 / πιθανότητα: αν το μοντέλο δίνει 50%, η δίκαιη απόδοση είναι 2,00. Οι αποδόσεις των εταιρειών έχουν ενσωματωμένο περιθώριο, οπότε είναι συνήθως χαμηλότερες. Στις λεπτομέρειες κάθε αγώνα μπορείς να γράψεις μια απόδοση και να δεις την αναμενόμενη απόδοση (EV) με βάση το μοντέλο: EV = P × απόδοση − 1.</p>
       <h3>Τι δεν ξέρει το μοντέλο</h3>
       <p>Τραυματισμούς, τιμωρίες, κούραση από ευρωπαϊκά παιχνίδια, αλλαγές προπονητή, κίνητρα. Βλέπει μόνο τα γκολ και τις βαθμολογίες. Χρησιμοποίησέ το ως σημείο εκκίνησης και όχι ως βεβαιότητα: ακόμα και ένα αποτέλεσμα με 70% χάνεται σχεδόν μία στις τρεις φορές.</p>
-      <h3>Πηγές δεδομένων</h3>
+    </div>
+        </section>
+      </div>
+
+      <aside class="aside" aria-label="Σύνοψη">
+        <section class="card" id="sure-card" hidden>
+          <h2>Τα πιο πιθανά</h2>
+          <p>Τα αποτελέσματα με τη μεγαλύτερη πιθανότητα τις επόμενες τρεις μέρες.</p>
+          <div class="sure" id="sure"></div>
+        </section>
+        <section class="card" id="form-card" hidden>
+          <h2>Πώς τα πάει το μοντέλο</h2>
+          <div id="form"></div>
+        </section>
+        <section class="card rg">
+          <div class="rg-head"><span class="age">18+</span><h2>Παίξε υπεύθυνα</h2></div>
+          <p>Οι πιθανότητες είναι εκτιμήσεις και όχι βεβαιότητες. Ακόμα και ένα αποτέλεσμα με 75% χάνεται μία στις τέσσερις φορές. Βάλε όριο πριν ξεκινήσεις και ποντάρισε μόνο ό,τι αντέχεις να χάσεις.</p>
+          <p>Αν ο τζόγος σού δημιουργεί πρόβλημα: <a href="https://findahelpline.com/el-GR/countries/gr/topics/gambling" target="_blank" rel="noopener">γραμμές υποστήριξης στην Ελλάδα</a>.</p>
+        </section>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<footer class="gut">
+  <div class="wrap">
+    <span class="age">18+</span>
+    <div>
+      <p>Το «Πόσο Πιθανό» δείχνει στατιστικές εκτιμήσεις και δεν είναι συμβουλή στοιχηματισμού. Δεν συνεργάζεται με στοιχηματικές εταιρείες.</p>
       <p id="sources"></p>
     </div>
-  </section>
-
-  <footer class="rg">
-    <p style="margin:0"><span class="badge18">18+</span><strong>Παίξε υπεύθυνα.</strong> Οι πιθανότητες εδώ είναι στατιστικές εκτιμήσεις, όχι συμβουλή στοιχηματισμού. Ποντάρισε μόνο ποσά που αντέχεις να χάσεις και βάλε όριο πριν ξεκινήσεις.</p>
-    <p style="margin:0">Αν ο τζόγος σού δημιουργεί πρόβλημα, ζήτα βοήθεια: <a href="https://findahelpline.com/el-GR/countries/gr/topics/gambling" target="_blank" rel="noopener">γραμμές υποστήριξης στην Ελλάδα</a>.</p>
-  </footer>
-</div>
+  </div>
+</footer>
 
 <script>
 (async function () {
   "use strict";
-  const stampEl = document.getElementById("stamp");
-  let DATA, HIST;
-  try {
-    const bust = "?t=" + Math.floor(Date.now() / 600000);   // νέα έκδοση κάθε 10 λεπτά
-    [DATA, HIST] = await Promise.all([
-      fetch("data.json" + bust).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
-      fetch("history.json" + bust).then(r => r.ok ? r.json() : { events: {} }).catch(() => ({ events: {} }))
-    ]);
-  } catch (e) {
-    stampEl.textContent = "Δεν φόρτωσαν τα δεδομένα. Δοκίμασε ξανά σε λίγο.";
-    return;
-  }
-  const RHO = -0.10, MAXG = 10;
   const $ = (s, r = document) => r.querySelector(s);
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
-  const pct = p => (p * 100).toFixed(0) + "%";
+  const pct = p => Math.round(p * 100) + "%";
   const pct1 = p => (p * 100).toFixed(1).replace(".", ",") + "%";
-  const fair = p => p > 0 ? (1 / p).toFixed(2).replace(".", ",") : "–";
+  const fair = p => p > 0.0005 ? (1 / p).toFixed(2).replace(".", ",") : "–";
+  const dec = (x, n = 1) => x.toFixed(n).replace(".", ",");
   const store = {
     get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
     set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
   };
 
-  /* ---------- Models ---------- */
-  function poissonPmf(l, k) { let p = Math.exp(-l); for (let i = 1; i <= k; i++) p *= l / i; return p; }
+  let DATA, HIST;
+  try {
+    const bust = "?t=" + Math.floor(Date.now() / 600000);
+    [DATA, HIST] = await Promise.all([
+      fetch("data.json" + bust).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
+      fetch("history.json" + bust).then(r => r.ok ? r.json() : { events: {} }).catch(() => ({ events: {} }))
+    ]);
+  } catch (e) {
+    $("#stamp").textContent = "Τα δεδομένα δεν φόρτωσαν. Ανανέωσε τη σελίδα σε λίγο.";
+    return;
+  }
 
-  function footballModel(lh, la) {
+  /* ---------- models ---------- */
+  const RHO = -0.10, MAXG = 10;
+  function pmf(l, k) { let p = Math.exp(-l); for (let i = 1; i <= k; i++) p *= l / i; return p; }
+  function football(lh, la) {
     const ph = [], pa = [];
-    for (let k = 0; k <= MAXG; k++) { ph.push(poissonPmf(lh, k)); pa.push(poissonPmf(la, k)); }
-    const M = []; let total = 0;
+    for (let k = 0; k <= MAXG; k++) { ph.push(pmf(lh, k)); pa.push(pmf(la, k)); }
+    const M = []; let tot = 0;
     for (let i = 0; i <= MAXG; i++) {
       M.push([]);
       for (let j = 0; j <= MAXG; j++) {
@@ -355,104 +465,170 @@ footer.rg a { color: inherit; }
         else if (i === 0 && j === 1) tau = 1 + lh * RHO;
         else if (i === 1 && j === 0) tau = 1 + la * RHO;
         else if (i === 1 && j === 1) tau = 1 - RHO;
-        const v = ph[i] * pa[j] * tau; M[i].push(v); total += v;
+        const v = ph[i] * pa[j] * tau; M[i].push(v); tot += v;
       }
     }
-    let H = 0, D = 0, A = 0, O15 = 0, O25 = 0, O35 = 0, BT = 0;
-    const scores = [];
+    let H = 0, D = 0, A = 0, O15 = 0, O25 = 0, O35 = 0, BT = 0; const sc = [];
     for (let i = 0; i <= MAXG; i++) for (let j = 0; j <= MAXG; j++) {
-      const v = M[i][j] / total; M[i][j] = v;
+      const v = M[i][j] / tot; M[i][j] = v;
       if (i > j) H += v; else if (i === j) D += v; else A += v;
       if (i + j > 1.5) O15 += v; if (i + j > 2.5) O25 += v; if (i + j > 3.5) O35 += v;
       if (i > 0 && j > 0) BT += v;
-      scores.push([i, j, v]);
+      sc.push([i, j, v]);
     }
-    scores.sort((a, b) => b[2] - a[2]);
-    return { M, H, D, A, O15, O25, O35, BT, top: scores.slice(0, 3) };
+    sc.sort((a, b) => b[2] - a[2]);
+    return { M, H, D, A, O15, O25, O35, BT, top: sc.slice(0, 3) };
   }
-
   function normCdf(x) {
-    const t = 1 / (1 + 0.2316419 * Math.abs(x));
-    const d = 0.3989423 * Math.exp(-x * x / 2);
+    const t = 1 / (1 + 0.2316419 * Math.abs(x)), d = 0.3989423 * Math.exp(-x * x / 2);
     const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
     return x > 0 ? 1 - p : p;
   }
+  function basketball(m) {
+    const sd = m.sd || 12, mg = m.expHome - m.expAway;
+    const h = 1 - normCdf((0.5 - mg) / sd), a = normCdf((-0.5 - mg) / sd), z = h + a;
+    const band = (lo, hi) => (normCdf((hi - mg) / sd) - normCdf((lo - mg) / sd)) / z;
+    return { H: h / z, D: 0, A: a / z, sd, mg, band, total: m.expHome + m.expAway };
+  }
+  const eloProb = (a, b) => 1 / (1 + Math.pow(10, (b - a) / 400));
 
-  function eloProb(a, b) { return 1 / (1 + Math.pow(10, (b - a) / 400)); }
+  /* ---------- icons ---------- */
+  function star(cx, cy, R, r) {
+    let s = "";
+    for (let k = 0; k < 10; k++) {
+      const ang = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? r : R;
+      s += (cx + rr * Math.cos(ang)).toFixed(2) + "," + (cy + rr * Math.sin(ang)).toFixed(2) + " ";
+    }
+    return s;
+  }
+  const H3 = (a, b, c) => `<rect width="30" height="20" fill="${a}"/><rect y="6.67" width="30" height="6.67" fill="${b}"/><rect y="13.33" width="30" height="6.67" fill="${c}"/>`;
+  const V3 = (a, b, c) => `<rect width="10" height="20" fill="${a}"/><rect x="10" width="10" height="20" fill="${b}"/><rect x="20" width="10" height="20" fill="${c}"/>`;
+  const FLAGS = {
+    GR: `<rect width="30" height="20" fill="#0D5EAF"/>${[1, 3, 5, 7].map(k => `<rect y="${(k * 20 / 9).toFixed(2)}" width="30" height="2.22" fill="#fff"/>`).join("")}<rect width="11.1" height="11.1" fill="#0D5EAF"/><rect x="4.44" width="2.22" height="11.1" fill="#fff"/><rect y="4.44" width="11.1" height="2.22" fill="#fff"/>`,
+    EN: `<rect width="30" height="20" fill="#fff"/><rect x="12.5" width="5" height="20" fill="#CE1124"/><rect y="7.5" width="30" height="5" fill="#CE1124"/>`,
+    ES: `<rect width="30" height="20" fill="#AA151B"/><rect y="5" width="30" height="10" fill="#F1BF00"/>`,
+    IT: V3("#009246", "#fff", "#CE2B37"), FR: V3("#0055A4", "#fff", "#EF4135"), BE: V3("#1a1a1a", "#FDDA24", "#EF3340"),
+    DE: H3("#1a1a1a", "#DD0000", "#FFCE00"), NL: H3("#AE1C28", "#fff", "#21468B"),
+    PT: `<rect width="30" height="20" fill="#FF0000"/><rect width="12" height="20" fill="#006600"/><circle cx="12" cy="10" r="4" fill="#FFCC00"/><circle cx="12" cy="10" r="2.4" fill="#FF0000"/>`,
+    TR: `<rect width="30" height="20" fill="#E30A17"/><circle cx="11" cy="10" r="5" fill="#fff"/><circle cx="12.3" cy="10" r="4" fill="#E30A17"/><polygon points="${star(17.6, 10, 2.6, 1.05)}" fill="#fff"/>`,
+    SC: `<rect width="30" height="20" fill="#005EB8"/><path d="M0 0 30 20M30 0 0 20" stroke="#fff" stroke-width="3.4"/>`,
+    US: `<rect width="30" height="20" fill="#fff"/>${[0, 2, 4, 6, 8, 10, 12].map(k => `<rect y="${(k * 20 / 13).toFixed(2)}" width="30" height="1.54" fill="#B22234"/>`).join("")}<rect width="12" height="10.77" fill="#3C3B6E"/>`,
+  };
+  const ROUND = {
+    UCL: ["#0B1F5C", "#fff"], UEL: ["#F26B0F", "#fff"], UECL: ["#1BA34A", "#fff"],
+    EL: ["#F37021", "ball"], EC: ["#1D5BBF", "ball"],
+  };
+  function icon(cc) {
+    if (FLAGS[cc]) return `<svg class="ic" viewBox="0 0 30 20" aria-hidden="true">${FLAGS[cc]}</svg>`;
+    const r = ROUND[cc] || ["#58736A", "#fff"];
+    const inner = r[1] === "ball"
+      ? `<path d="M10 2.5v15M2.5 10h15M4.7 4.7c2.6 2.6 2.6 8 0 10.6M15.3 4.7c-2.6 2.6-2.6 8 0 10.6" fill="none" stroke="#1a1000" stroke-width="1.2"/>`
+      : `<polygon points="${star(10, 10.4, 6, 2.5)}" fill="${r[1]}"/>`;
+    return `<svg class="ic round" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="${r[0]}"/>${inner}</svg>`;
+  }
+  const iconEl = cc => { const s = el("span"); s.innerHTML = icon(cc); return s.firstChild; };   // fixed strings only
 
-  /* ---------- Shared bits ---------- */
-  const tzFmt = new Intl.DateTimeFormat("el-GR", { timeZone: "Europe/Athens", hour: "2-digit", minute: "2-digit", hour12: false });
-  const dayFmt = new Intl.DateTimeFormat("el-GR", { timeZone: "Europe/Athens", weekday: "long", day: "numeric", month: "long" });
-  const dayKey = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Athens", year: "numeric", month: "2-digit", day: "2-digit" });
+  const STOP = new Set(["fc", "afc", "cf", "sc", "ac", "as", "ss", "ssc", "sv", "vfb", "vfl", "bc", "fk", "sk", "nk", "rc", "rcd", "cd", "ud", "club", "de", "of", "the", "1.", "us", "ogc", "losc", "tsg"]);
+  function initials(name) {
+    const w = name.replace(/[.'’]/g, " ").split(/\s+/).filter(Boolean);
+    if (w.length === 1) return w[0].length <= 4 && w[0] === w[0].toUpperCase() ? w[0] : w[0].slice(0, 3).toUpperCase();
+    const k = w.filter(x => !STOP.has(x.toLowerCase()));
+    const use = k.length ? k : w;
+    if (use.length === 1) return use[0].slice(0, 3).toUpperCase();
+    return (use[0][0] + use[1][0]).toUpperCase();
+  }
+  function hue(name) { let h = 0; for (const c of name) h = (h * 31 + c.charCodeAt(0)) % 360; return h; }
+  function mono(name, size) {
+    const m = el("span", "mono" + (size ? " " + size : ""), initials(name));
+    m.style.setProperty("--h", hue(name)); m.setAttribute("aria-hidden", "true");
+    return m;
+  }
 
-  function bar3(h, d, a) {
-    const b = el("div", "bar");
-    b.setAttribute("role", "img");
-    b.setAttribute("aria-label", `1: ${pct(h)}, Χ: ${pct(d)}, 2: ${pct(a)}`);
-    [["h", h], ["d", d], ["w", a]].forEach(([c, v]) => { const s = el("div", c); if (v <= 0) return; s.style.flex = `0 0 calc(${(v * 100).toFixed(2)}% - 2px)`; b.append(s); });
+  /* ---------- time ---------- */
+  const TZ = "Europe/Athens";
+  const fTime = new Intl.DateTimeFormat("el-GR", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hour12: false });
+  const fDay = new Intl.DateTimeFormat("el-GR", { timeZone: TZ, weekday: "long", day: "numeric", month: "long" });
+  const fWk = new Intl.DateTimeFormat("el-GR", { timeZone: TZ, weekday: "short", day: "numeric", month: "numeric" });
+  const fKey = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" });
+  const todayKey = fKey.format(new Date()), tomorrowKey = fKey.format(new Date(Date.now() + 864e5));
+  function dayName(d) { const k = fKey.format(d); return k === todayKey ? "Σήμερα" : k === tomorrowKey ? "Αύριο" : null; }
+  function whenShort(d) { return (dayName(d) || fWk.format(d)) + ", " + fTime.format(d); }
+
+  /* ---------- prepare data ---------- */
+  const NOW = Date.now();
+  const LEAGUES = DATA.leagues || [];
+  const META = Object.fromEntries(LEAGUES.map(l => [l.name, l]));
+  const ORDER = LEAGUES.map(l => l.name);
+  const matches = (DATA.matches || []).map(m => {
+    const kt = new Date(m.kickoff);
+    const r = m.sport === "football" ? football(m.lambdaHome, m.lambdaAway) : basketball(m);
+    return Object.assign({}, m, { kt, r, cc: m.country || (META[m.league] || {}).cc || "" });
+  }).filter(m => m.kt.getTime() > NOW - 2.5 * 36e5).sort((a, b) => a.kt - b.kt);
+  const bySport = s => matches.filter(m => m.sport === s);
+  const greek = s => /[Α-Ωα-ωάέήίόύώ]/.test(s);
+  const W = { "Champions League": 10, "Europa League": 7, "Conference League": 6, "Premier League": 6, "Super League": 6,
+              "La Liga": 5, "Serie A": 5, "Bundesliga": 5, "Ligue 1": 4, "EuroLeague": 6, "NBA": 4 };
+  function importance(m) {
+    const days = (m.kt - NOW) / 864e5;
+    return (W[m.league] || 3) + (greek(m.home) || greek(m.away) ? 4 : 0) + 3 * (1 - Math.abs(m.r.H - m.r.A)) - 0.7 * Math.max(0, days);
+  }
+  function best(m) {
+    const o = m.sport === "football"
+      ? [["1", m.r.H, m.home + " νίκη"], ["Χ", m.r.D, "Ισοπαλία"], ["2", m.r.A, m.away + " νίκη"]]
+      : [["1", m.r.H, m.home + " νίκη"], ["2", m.r.A, m.away + " νίκη"]];
+    return o.sort((a, b) => b[1] - a[1])[0];
+  }
+
+  /* ---------- shared bits ---------- */
+  function pbar(r) {
+    const b = el("div", "pbar"); b.setAttribute("role", "img");
+    b.setAttribute("aria-label", r.D ? `1 ${pct(r.H)}, Χ ${pct(r.D)}, 2 ${pct(r.A)}` : `1 ${pct(r.H)}, 2 ${pct(r.A)}`);
+    [["h", r.H], ["d", r.D], ["a", r.A]].forEach(([c, v]) => { if (v > 0.001) { const i = el("i", c); i.style.flex = `${v} 1 0`; b.append(i); } });
     return b;
   }
-
-  function leanFor(r) {
-    const opts = [
-      ["Άσος", r.H], ["Ισοπαλία", r.D], ["Διπλό", r.A],
-      ["Over 2,5", r.O25], ["Under 2,5", 1 - r.O25],
-      ["Γκολ-Γκολ", r.BT], ["Όχι Γκολ-Γκολ", 1 - r.BT],
-    ];
-    opts.sort((x, y) => y[1] - x[1]);
-    return opts[0];
-  }
-
-  function outcome1x2(h, a) { return h > a ? "H" : h === a ? "D" : "A"; }
-
-  /* ---------- Football ---------- */
-  const fbMatches = DATA.matches.filter(m => m.sport === "football").sort((a, b) => a.kickoff.localeCompare(b.kickoff));
-  const NOTES = Object.fromEntries((DATA.leagues || []).map(l => [l.name, l.note]));
-  const LEAGUE_ORDER = (DATA.leagues || []).map(l => l.name);
-  const leaguesOf = list => [...new Set(list.map(m => m.league))].sort((a, b) => LEAGUE_ORDER.indexOf(a) - LEAGUE_ORDER.indexOf(b));
-  const leagues = leaguesOf(fbMatches);
-  const selected = {};
-
-  function leagueTabs(sport, list, hostSel, noteSel, onChange) {
-    const ls = leaguesOf(list);
-    let cur = store.get("pp-lg-" + sport);
-    if (!cur || (cur !== "all" && !ls.includes(cur))) cur = ls[0] || "all";
-    selected[sport] = cur;
-    const host = $(hostSel);
-    function draw() {
-      host.textContent = "";
-      [["all", "Όλα", "", list.length], ...ls.map(l => [l, l, (list.find(m => m.league === l) || {}).country || "", list.filter(m => m.league === l).length])]
-        .forEach(([k, label, cc, n]) => {
-          const b = el("button", "lt"); b.type = "button"; b.setAttribute("role", "tab");
-          b.setAttribute("aria-selected", String(selected[sport] === k));
-          if (cc) b.append(el("span", "cc", cc));
-          b.append(document.createTextNode(label), el("span", "n", String(n)));
-          b.addEventListener("click", () => { selected[sport] = k; store.set("pp-lg-" + sport, k); draw(); onChange(); });
-          host.append(b);
-        });
-      $(noteSel).textContent = selected[sport] === "all" ? "Όλοι οι αγώνες των επόμενων ημερών, σε ώρα Ελλάδας." : (NOTES[selected[sport]] || "");
-    }
-    draw();
-  }
-
-  function renderLegend() {
-    const lg = $("#fb-legend");
-    [["var(--home)", "1 γηπεδούχος"], ["var(--draw)", "Χ"], ["var(--away)", "2 φιλοξενούμενος"]].forEach(([c, t]) => {
-      const s = el("span"); const i = el("i"); i.style.background = c; s.append(i, t); lg.append(s);
+  function oddsBox(m) {
+    const wrap = el("div", "odds" + (m.sport === "basketball" ? " two" : ""));
+    const items = m.sport === "football" ? [["1", m.r.H], ["Χ", m.r.D], ["2", m.r.A]] : [["1", m.r.H], ["2", m.r.A]];
+    const top = Math.max(...items.map(x => x[1]));
+    items.forEach(([k, p]) => {
+      const o = el("div", "odd" + (p === top ? " best" : ""));
+      o.setAttribute("aria-label", `${k}: πιθανότητα ${pct(p)}, δίκαιη απόδοση ${fair(p)}`);
+      o.append(el("span", "k", k), el("span", "v", fair(p)), el("span", "p", pct(p)));
+      wrap.append(o);
     });
+    return wrap;
   }
-
-  function marketTile(label, p) {
+  function tile(label, p) {
     const d = el("div", "mk");
     d.append(el("span", null, label), el("b", null, pct(p)), el("small", null, "δίκαιη " + fair(p)));
     return d;
   }
-
-  function scoreGrid(r, m) {
-    const wrap = el("div");
-    wrap.append(el("h3", null, "Πιθανότητα σκορ"));
-    const gw = el("div", "grid-wrap");
-    const t = el("table", "sm");
+  function calc(m, items) {
+    const box = el("div", "calc");
+    box.append(el("h4", null, "Σύγκρινε με την απόδοση που βλέπεις"));
+    const row = el("div", "calc-row" + (items.length === 2 ? " two" : ""));
+    items.forEach(([k, p], i) => {
+      const L = el("label"), id = `o-${m.id}-${i}`.replace(/[^\w-]/g, "_");
+      L.htmlFor = id; L.append(document.createTextNode("Απόδοση " + k));
+      const inp = el("input"); inp.id = id; inp.inputMode = "decimal"; inp.placeholder = fair(p); inp.autocomplete = "off";
+      const out = el("span", "ev-val");
+      inp.addEventListener("input", () => {
+        const o = parseFloat(inp.value.replace(",", "."));
+        if (!(o > 1)) { out.textContent = ""; out.className = "ev-val"; return; }
+        const e = p * o - 1;
+        out.textContent = (e >= 0 ? "Αξία +" : "Αξία −") + dec(Math.abs(e * 100)) + "%";
+        out.className = "ev-val " + (e >= 0 ? "pos" : "neg");
+      });
+      L.append(inp, out); row.append(L);
+    });
+    box.append(row, el("p", "hint", "Θετική αξία σημαίνει ότι η απόδοση είναι υψηλότερη από τη δίκαιη του μοντέλου."));
+    return box;
+  }
+  function detailFootball(m) {
+    const r = m.r, d = el("div", "detail");
+    const left = el("div");
+    left.append(el("h4", null, "Πιθανότητα για κάθε σκορ"));
+    const gw = el("div", "grid-wrap"), t = el("table", "sg");
     const max = Math.max(...r.M.slice(0, 6).flatMap(row => row.slice(0, 6)));
     const hr = el("tr"); hr.append(el("th", null, ""));
     for (let j = 0; j <= 5; j++) hr.append(el("th", null, String(j)));
@@ -460,364 +636,339 @@ footer.rg a { color: inherit; }
     for (let i = 0; i <= 5; i++) {
       const tr = el("tr"); tr.append(el("th", null, String(i)));
       for (let j = 0; j <= 5; j++) {
-        const v = r.M[i][j]; const a = v / max;
-        const td = el("td", a > 0.55 ? "hot" : null, (v * 100).toFixed(1).replace(".", ","));
-        td.style.background = `rgb(var(--heat) / ${(0.06 + a * 0.88).toFixed(3)})`;
+        const v = r.M[i][j], a = v / max;
+        const td = el("td", a > 0.55 ? "hot" : null, dec(v * 100));
+        td.style.background = `rgb(var(--heat) / ${(0.06 + a * 0.9).toFixed(3)})`;
         td.title = `${i}-${j}: ${pct1(v)}`;
         tr.append(td);
       }
       t.append(tr);
     }
-    gw.append(t); wrap.append(gw);
-    wrap.append(el("div", "axis", `Γραμμές: γκολ ${m.home} · Στήλες: γκολ ${m.away} · τιμές σε %`));
-    return wrap;
-  }
-
-  function valueBox(r, id) {
-    const box = el("div", "value");
-    box.append(el("h3", null, "Σύγκρινε με απόδοση"));
-    const row = el("div", "value-row");
-    const evs = [];
-    [["1", r.H], ["Χ", r.D], ["2", r.A]].forEach(([lab, p], idx) => {
-      const L = el("label"); const iid = `odd-${id}-${idx}`; L.htmlFor = iid;
-      L.append(document.createTextNode(`Απόδοση ${lab}`));
-      const inp = el("input"); inp.id = iid; inp.inputMode = "decimal"; inp.placeholder = fair(p); inp.autocomplete = "off";
-      const ev = el("div", "ev");
-      inp.addEventListener("input", () => {
-        const o = parseFloat(inp.value.replace(",", "."));
-        if (!(o > 1)) { ev.textContent = ""; ev.className = "ev"; return; }
-        const e = p * o - 1;
-        ev.textContent = `EV ${e >= 0 ? "+" : "−"}${Math.abs(e * 100).toFixed(1).replace(".", ",")}%`;
-        ev.className = "ev " + (e >= 0 ? "pos" : "neg");
-      });
-      L.append(inp, ev); row.append(L); evs.push(ev);
-    });
-    box.append(row);
-    box.append(el("p", "hint", "Γράψε την απόδοση που βλέπεις. Θετικό EV σημαίνει ότι η απόδοση είναι υψηλότερη από τη δίκαιη του μοντέλου."));
-    return box;
-  }
-
-  function matchSlip(m) {
-    const r = footballModel(m.lambdaHome, m.lambdaAway);
-    const slip = el("article", "slip");
-    const main = el("div", "slip-main");
-
-    const when = el("div", "when");
-    when.append(el("span", "t", tzFmt.format(new Date(m.kickoff))), el("span", "lg", m.league));
-
-    const core = el("div", "core");
-    const teams = el("div", "teams");
-    teams.append(el("span", null, m.home), el("span", "a", m.away));
-    const odds = el("div", "odds3");
-    [["1", r.H], ["Χ", r.D], ["2", r.A]].forEach(([lab, p]) => {
-      const d = el("div"); const s = el("strong", null, pct(p));
-      d.append(s, document.createTextNode(" "), el("span", "fo", `(${fair(p)})`));
-      d.setAttribute("aria-label", `${lab}: ${pct(p)}, δίκαιη απόδοση ${fair(p)}`);
-      odds.append(d);
-    });
-    core.append(teams, bar3(r.H, r.D, r.A), odds);
-
-    const side = el("div", "side");
-    const kv = (k, v) => { const d = el("div", "kv"); d.append(el("span", null, k), el("b", null, v)); return d; };
-    side.append(kv("Over 2,5", pct(r.O25)), kv("Γκολ-Γκολ", pct(r.BT)), kv("xG", `${m.lambdaHome.toFixed(2).replace(".", ",")} – ${m.lambdaAway.toFixed(2).replace(".", ",")}`));
-
-    main.append(when, core, side);
-
-    const foot = el("div", "slip-foot");
-    const [leanLabel, leanP] = leanFor(r);
-    const lean = el("span", "lean" + (leanP >= 0.6 ? " strong" : ""), `Τάση: ${leanLabel} · ${pct(leanP)}`);
-    const right = el("div"); right.style.cssText = "display:flex;gap:10px;align-items:center;flex-wrap:wrap";
-    if (m.result) {
-      const pick = [["H", r.H], ["D", r.D], ["A", r.A]].sort((a, b) => b[1] - a[1])[0][0];
-      const real = outcome1x2(m.result.home, m.result.away);
-      right.append(el("span", "result-tag " + (pick === real ? "hit" : "miss"), `Τελικό ${m.result.home}-${m.result.away}`));
-    }
-    const tg = el("button", "toggle", "Λεπτομέρειες ▾"); tg.type = "button"; tg.setAttribute("aria-expanded", "false");
-    right.append(tg);
-    foot.append(lean, right);
-
-    const det = el("div", "detail"); det.hidden = true;
-    const left = scoreGrid(r, m);
-    const rt = el("div"); rt.style.minWidth = "0";
-    rt.append(el("h3", null, "Αγορές"));
+    gw.append(t); left.append(gw, el("div", "axis", `Γραμμές: γκολ ${m.home}. Στήλες: γκολ ${m.away}. Τιμές σε %.`));
+    const right = el("div"); right.style.minWidth = "0";
+    right.append(el("h4", null, "Αγορές"));
     const mk = el("div", "mkts");
-    mk.append(
-      marketTile("1Χ", r.H + r.D), marketTile("Χ2", r.D + r.A), marketTile("12", r.H + r.A),
-      marketTile("Over 1,5", r.O15), marketTile("Under 2,5", 1 - r.O25), marketTile("Over 3,5", r.O35),
-      marketTile("Όχι Γκολ-Γκολ", 1 - r.BT),
-      marketTile(`Σκορ ${r.top[0][0]}-${r.top[0][1]}`, r.top[0][2]),
-      marketTile(`Σκορ ${r.top[1][0]}-${r.top[1][1]}`, r.top[1][2])
-    );
-    rt.append(mk, valueBox(r, m.id));
-    det.append(left, rt);
-
-    tg.addEventListener("click", () => {
-      det.hidden = !det.hidden;
-      tg.setAttribute("aria-expanded", String(!det.hidden));
-      tg.textContent = det.hidden ? "Λεπτομέρειες ▾" : "Κλείσιμο ▴";
+    mk.append(tile("1Χ", r.H + r.D), tile("Χ2", r.D + r.A), tile("12", r.H + r.A), tile("Over 1,5", r.O15),
+      tile("Over 2,5", r.O25), tile("Under 2,5", 1 - r.O25), tile("Over 3,5", r.O35), tile("Γκολ-Γκολ", r.BT),
+      tile("Όχι Γκολ-Γκολ", 1 - r.BT), tile(`Σκορ ${r.top[0][0]}-${r.top[0][1]}`, r.top[0][2]), tile(`Σκορ ${r.top[1][0]}-${r.top[1][1]}`, r.top[1][2]),
+      tile(`Σκορ ${r.top[2][0]}-${r.top[2][1]}`, r.top[2][2]));
+    right.append(mk, calc(m, [["1", r.H], ["Χ", r.D], ["2", r.A]]));
+    d.append(left, right);
+    return d;
+  }
+  function detailBasketball(m) {
+    const r = m.r, d = el("div", "detail one"), w = el("div");
+    w.append(el("h4", null, "Διαφορά στο τέλος"));
+    const mk = el("div", "mkts");
+    [[`${m.home} 11+`, 10.5, 200], [`${m.home} 6–10`, 5.5, 10.5], [`${m.home} 1–5`, 0.5, 5.5],
+     [`${m.away} 1–5`, -5.5, -0.5], [`${m.away} 6–10`, -10.5, -5.5], [`${m.away} 11+`, -200, -10.5]]
+      .forEach(([l, lo, hi]) => mk.append(tile(l, r.band(lo, hi))));
+    const h2 = el("h4", null, "Σύνολο πόντων"); h2.style.marginTop = "16px";
+    const lines = el("div", "mkts"), tsd = r.sd * 1.25;
+    [Math.round(r.total) - 5.5, Math.round(r.total) + 4.5].forEach(line => {
+      const po = 1 - normCdf((line - r.total) / tsd);
+      lines.append(tile(`Over ${dec(line)}`, po), tile(`Under ${dec(line)}`, 1 - po));
     });
-
-    slip.append(main, foot, det);
-    return slip;
+    w.append(mk, h2, lines, calc(m, [["1", r.H], ["2", r.A]]));
+    d.append(w);
+    return d;
   }
 
-  function groupByDay(list, render, host) {
-    host.textContent = "";
-    const groups = new Map();
-    list.forEach(m => { const k = dayKey.format(new Date(m.kickoff)); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(m); });
-    groups.forEach(ms => {
-      const sec = el("section", "day");
-      const h = dayFmt.format(new Date(ms[0].kickoff));
-      sec.append(el("h2", null, h + " · ώρα Ελλάδας"));
-      ms.forEach(m => sec.append(render(m)));
-      host.append(sec);
-    });
+  function eventRow(m) {
+    const a = el("article", "ev"); a.id = "ev-" + m.id.replace(/[^\w-]/g, "_");
+    const main = el("div", "ev-main");
+    const time = el("div", "ev-time");
+    const lg = el("span"); lg.append(iconEl(m.cc), document.createTextNode(m.league));
+    time.append(el("b", null, fTime.format(m.kt)), lg);
+    const teams = el("div", "ev-teams");
+    [m.home, m.away].forEach(n => { const t = el("div", "tm"); t.append(mono(n, "sm"), el("span", null, n)); teams.append(t); });
+    teams.append(pbar(m.r));
+    if (m.sport === "basketball") {
+      const sp = -m.r.mg;
+      const s = el("div", "spread");
+      s.append(el("span", null, `Χάντικαπ ${sp > 0 ? "+" : ""}${dec(sp)}`), el("span", null, `Σύνολο ${dec(m.r.total)}`));
+      teams.append(s);
+    }
+    const odds = oddsBox(m); odds.classList.add("ev-odds");
+    const btn = el("button", "more"); btn.type = "button"; btn.setAttribute("aria-expanded", "false");
+    btn.setAttribute("aria-label", `Ανάλυση ${m.home} – ${m.away}`);
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+    main.append(time, teams, odds, btn);
+    a.append(main);
+    let det = null;
+    const toggle = open => {
+      if (!det) { det = m.sport === "football" ? detailFootball(m) : detailBasketball(m); det.hidden = true; a.append(det); }
+      det.hidden = open === undefined ? !det.hidden : !open;
+      btn.setAttribute("aria-expanded", String(!det.hidden));
+    };
+    btn.addEventListener("click", () => toggle());
+    a._open = () => toggle(true);
+    return a;
   }
 
-  function renderFootball() {
-    const list = fbMatches.filter(m => selected.football === "all" || m.league === selected.football);
-    const host = $("#fb-list");
-    if (!list.length) {
+  /* ---------- lists with league chips and search ---------- */
+  const fold = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const state = {};
+  function setupSport(sport) {
+    const list = bySport(sport);
+    const ls = [...new Set(list.map(m => m.league))].sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
+    let cur = store.get("pp-lg-" + sport);
+    if (!cur || (cur !== "all" && !ls.includes(cur))) cur = "all";
+    state[sport] = { league: cur, q: "" };
+    const host = $(`#${sport === "football" ? "fb" : "bb"}-leagues`);
+    const listHost = $(`#${sport === "football" ? "fb" : "bb"}-list`);
+    const q = $(`#${sport === "football" ? "fb" : "bb"}-q`);
+    function chips() {
       host.textContent = "";
-      const e = el("div", "empty");
-      e.append(el("h3", null, "Δεν υπάρχουν αγώνες αυτή τη στιγμή"), el("p", null, "Οι προβλέψεις της επόμενης αγωνιστικής ανεβαίνουν μόλις κλειδώσει το πρόγραμμα."));
-      host.append(e); return;
+      [["all", "Όλα", null], ...ls.map(l => [l, l, (list.find(m => m.league === l) || {}).cc])].forEach(([k, label, cc]) => {
+        const n = k === "all" ? list.length : list.filter(m => m.league === k).length;
+        const b = el("button", "lg"); b.type = "button"; b.setAttribute("aria-pressed", String(state[sport].league === k));
+        if (cc) b.append(iconEl(cc));
+        b.append(document.createTextNode(label), el("span", "n", String(n)));
+        b.addEventListener("click", () => { state[sport].league = k; store.set("pp-lg-" + sport, k); chips(); draw(); });
+        host.append(b);
+      });
     }
-    groupByDay(list, matchSlip, host);
-  }
-
-  /* ---------- Basketball (normal margin model) ---------- */
-  const bbMatches = DATA.matches.filter(m => m.sport === "basketball").sort((a, b) => a.kickoff.localeCompare(b.kickoff));
-  function bbSlip(m) {
-    const sd = m.sd || 12;
-    const margin = m.expHome - m.expAway;
-    const pH = 1 - normCdf((0.5 - margin) / sd);          // home wins by 1+ (continuity corrected)
-    const pA = normCdf((-0.5 - margin) / sd);
-    const z = pH + pA, ph = pH / z, pa = pA / z;          // overtime decides ties
-    const slip = el("article", "slip");
-    const main = el("div", "slip-main");
-    const when = el("div", "when"); when.append(el("span", "t", tzFmt.format(new Date(m.kickoff))), el("span", "lg", m.league));
-    const core = el("div", "core");
-    const teams = el("div", "teams"); teams.append(el("span", null, m.home), el("span", "a", m.away));
-    const odds = el("div", "odds3"); odds.style.gridTemplateColumns = "1fr 1fr";
-    [ph, pa].forEach((p, i) => {
-      const d = el("div"); if (i) d.style.textAlign = "right";
-      d.append(el("strong", null, pct(p)), document.createTextNode(" "), el("span", "fo", `(${fair(p)})`));
-      odds.append(d);
-    });
-    core.append(teams, bar3(ph, 0, pa), odds);
-    const side = el("div", "side");
-    const kv = (k, v) => { const d = el("div", "kv"); d.append(el("span", null, k), el("b", null, v)); return d; };
-    const spread = -margin, total = m.expHome + m.expAway;
-    const dec = x => x.toFixed(1).replace(".", ",");
-    side.append(kv("Χάντικαπ", (spread > 0 ? "+" : "") + dec(spread)), kv("Σύνολο", dec(total)), kv("Σκορ", `${Math.round(m.expHome)}-${Math.round(m.expAway)}`));
-    main.append(when, core, side);
-
-    const foot = el("div", "slip-foot");
-    const fav = ph >= pa ? m.home : m.away, fp = Math.max(ph, pa);
-    foot.append(el("span", "lean" + (fp >= 0.7 ? " strong" : ""), `Φαβορί: ${fav} · ${pct(fp)}`));
-    const tg = el("button", "toggle", "Λεπτομέρειες ▾"); tg.type = "button"; tg.setAttribute("aria-expanded", "false");
-    foot.append(tg);
-
-    const det = el("div", "detail"); det.hidden = true; det.style.gridTemplateColumns = "minmax(0,1fr)";
-    const wrap = el("div"); wrap.style.minWidth = "0";
-    wrap.append(el("h3", null, "Διαφορά στο τέλος"));
-    const mk = el("div", "mkts");
-    const band = (lo, hi) => normCdf((hi - margin) / sd) - normCdf((lo - margin) / sd);
-    const bands = [
-      [`${m.home} 11+`, band(10.5, 200)], [`${m.home} 6–10`, band(5.5, 10.5)], [`${m.home} 1–5`, band(0.5, 5.5)],
-      [`${m.away} 1–5`, band(-5.5, -0.5)], [`${m.away} 6–10`, band(-10.5, -5.5)], [`${m.away} 11+`, band(-200, -10.5)]
-    ];
-    bands.forEach(([l, p]) => mk.append(marketTile(l, p / z)));
-    wrap.append(mk);
-    const h3b = el("h3", null, "Γραμμές του μοντέλου"); h3b.style.marginTop = "14px"; wrap.append(h3b);
-    const lines = el("div", "mkts");
-    const tsd = sd * 1.25;   // totals vary a little more than margins
-    [Math.round(total) - 5.5, Math.round(total) + 4.5].forEach(line => {
-      const pOver = 1 - normCdf((line - total) / tsd);
-      lines.append(marketTile(`Over ${dec(line)}`, pOver), marketTile(`Under ${dec(line)}`, 1 - pOver));
-    });
-    wrap.append(lines);
-    const pseudo = { H: ph, D: 0, A: pa };
-    const vb = valueBox(pseudo, m.id);
-    vb.querySelector(".value-row").children[1].remove();
-    vb.querySelector(".value-row").style.gridTemplateColumns = "repeat(2, minmax(0,1fr))";
-    wrap.append(vb);
-    det.append(wrap);
-    tg.addEventListener("click", () => {
-      det.hidden = !det.hidden;
-      tg.setAttribute("aria-expanded", String(!det.hidden));
-      tg.textContent = det.hidden ? "Λεπτομέρειες ▾" : "Κλείσιμο ▴";
-    });
-    slip.append(main, foot, det);
-    return slip;
-  }
-  function renderBasketball() {
-    const list = bbMatches.filter(m => selected.basketball === "all" || m.league === selected.basketball);
-    if (!list.length) {
-      const host = $("#bb-list"); host.textContent = "";
-      const e = el("div", "empty");
-      e.append(el("h3", null, "Δεν υπάρχουν αγώνες αυτή τη στιγμή"), el("p", null, "Οι προβλέψεις ανεβαίνουν μόλις κλειδώσει το πρόγραμμα."));
-      host.append(e); return;
+    function draw() {
+      const s = state[sport], needle = fold(s.q.trim());
+      const shown = list.filter(m => (s.league === "all" || m.league === s.league) &&
+        (!needle || fold(m.home).includes(needle) || fold(m.away).includes(needle)));
+      listHost.textContent = "";
+      if (!shown.length) {
+        const e = el("div", "empty");
+        if (needle) e.append(el("h3", null, "Δεν βρέθηκε αγώνας"), el("p", null, `Καμία ομάδα με «${s.q.trim()}» στους αγώνες των επόμενων ημερών. Δοκίμασε άλλο όνομα ή διάλεξε «Όλα».`));
+        else e.append(el("h3", null, "Δεν υπάρχουν αγώνες τις επόμενες μέρες"),
+          el("p", null, "Οι προβλέψεις ανεβαίνουν αυτόματα μόλις βγει το πρόγραμμα. Η σελίδα ενημερώνεται δύο φορές τη μέρα."));
+        listHost.append(e); return;
+      }
+      const groups = new Map();
+      shown.forEach(m => { const k = fKey.format(m.kt); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(m); });
+      groups.forEach(ms => {
+        const sec = el("section", "day");
+        const h = el("h3", null, dayName(ms[0].kt) || fDay.format(ms[0].kt).replace(/^./, c => c.toUpperCase()));
+        if (dayName(ms[0].kt)) h.append(el("span", null, fDay.format(ms[0].kt)));
+        sec.append(h);
+        ms.forEach(m => sec.append(eventRow(m)));
+        listHost.append(sec);
+      });
     }
-    groupByDay(list, bbSlip, $("#bb-list"));
+    q.addEventListener("input", () => { state[sport].q = q.value; draw(); });
+    chips(); draw();
+    return {
+      reveal(m) {
+        if (state[sport].league !== "all" && state[sport].league !== m.league) { state[sport].league = "all"; chips(); }
+        if (state[sport].q) { state[sport].q = ""; q.value = ""; }
+        draw();
+        const row = document.getElementById("ev-" + m.id.replace(/[^\w-]/g, "_"));
+        if (row) { row._open(); row.classList.remove("flash"); void row.offsetWidth; row.classList.add("flash"); row.scrollIntoView({ behavior: "smooth", block: "center" }); }
+      }
+    };
   }
 
-  /* ---------- Tennis ---------- */
+  /* ---------- hero ---------- */
+  const PITCH = '<svg viewBox="0 0 400 240" preserveAspectRatio="xMidYMid slice"><g fill="none" stroke="#fff" stroke-width="2"><rect x="10" y="10" width="380" height="220"/><path d="M200 10v220"/><circle cx="200" cy="120" r="38"/><rect x="10" y="62" width="58" height="116"/><rect x="332" y="62" width="58" height="116"/><rect x="10" y="94" width="20" height="52"/><rect x="370" y="94" width="20" height="52"/></g></svg>';
+  const COURT = '<svg viewBox="0 0 400 240" preserveAspectRatio="xMidYMid slice"><g fill="none" stroke="#fff" stroke-width="2"><rect x="10" y="10" width="380" height="220"/><path d="M200 10v220"/><circle cx="200" cy="120" r="32"/><path d="M10 30h50a90 90 0 0 1 0 180H10M390 30h-50a90 90 0 0 0 0 180h50"/><rect x="10" y="86" width="70" height="68"/><rect x="320" y="86" width="70" height="68"/></g></svg>';
+  let views = {};
+  function renderHero(m, list) {
+    const h = $("#hero"); h.textContent = "";
+    h.className = "hero" + (m.sport === "basketball" ? " bb" : "");
+    const lines = el("div", "lines"); lines.innerHTML = m.sport === "basketball" ? COURT : PITCH;
+    const top = el("div", "hero-top");
+    const chip = el("span", "chip-lg"); chip.append(iconEl(m.cc), document.createTextNode(m.league));
+    top.append(chip, el("span", "when-lg", whenShort(m.kt)));
+    const duel = el("div", "duel");
+    const L = el("div", "side"); L.append(mono(m.home, "xl"), el("span", "nm", m.home));
+    const R = el("div", "side r"); R.append(mono(m.away, "xl"), el("span", "nm", m.away));
+    duel.append(L, el("span", "vs", "vs"), R);
+    const bar = pbar(m.r);
+    const lab = el("div", "plabels");
+    lab.append(el("span", null, pct(m.r.H)), el("span", null, m.sport === "football" ? "Ισοπαλία " + pct(m.r.D) : ""), el("span", null, pct(m.r.A)));
+    const facts = el("div", "facts");
+    const fact = (k, v) => { const s = el("span", null, k); s.append(el("b", null, v)); return s; };
+    if (m.sport === "football") {
+      const t = m.r.top[0];
+      facts.append(fact("Πιθανότερο σκορ", `${t[0]}-${t[1]}`), fact("Over 2,5", pct(m.r.O25)), fact("Γκολ-Γκολ", pct(m.r.BT)),
+        fact("Αναμενόμενα γκολ", `${dec(m.lambdaHome, 2)}–${dec(m.lambdaAway, 2)}`));
+    } else {
+      const sp = -m.r.mg;
+      facts.append(fact("Αναμενόμενο σκορ", `${Math.round(m.expHome)}-${Math.round(m.expAway)}`),
+        fact("Χάντικαπ", (sp > 0 ? "+" : "") + dec(sp)), fact("Σύνολο", dec(m.r.total)));
+    }
+    const go = el("span", "go"), gb = el("button", "btn-ghost", "Δες όλη την ανάλυση"); gb.type = "button";
+    gb.addEventListener("click", () => { showTab(m.sport); views[m.sport].reveal(m); });
+    go.append(gb); facts.append(go);
+    h.append(lines, top, duel, bar, lab, oddsBox(m), facts);
+    $("#bigs").querySelectorAll(".big").forEach(b => b.setAttribute("aria-current", String(b._m === m)));
+  }
+  function renderStage() {
+    const soon = matches.filter(m => m.kt.getTime() > NOW && m.kt.getTime() < NOW + 4 * 864e5)
+      .map(m => [importance(m), m]).sort((a, b) => b[0] - a[0]).map(x => x[1]);
+    if (!soon.length) return;
+    $("#stage").hidden = false;
+    const bigs = $("#bigs"); bigs.textContent = "";
+    bigs.append(el("h2", null, "Μεγάλοι αγώνες"));
+    soon.slice(0, 5).forEach(m => {
+      const b = el("button", "big"); b.type = "button"; b._m = m;
+      const t = el("div", "bt");
+      t.append(el("b", null, `${m.home} – ${m.away}`), el("span", null, `${m.league}, ${whenShort(m.kt)}`));
+      const [k, p] = best(m);
+      const bp = el("div", "bp", pct(p)); bp.append(el("small", null, k === "Χ" ? "ισοπαλία" : k === "1" ? "άσος" : "διπλό"));
+      b.append(iconEl(m.cc), t, bp);
+      b.addEventListener("click", () => renderHero(m));
+      bigs.append(b);
+    });
+    renderHero(soon[0]);
+  }
+
+  /* ---------- sidebar ---------- */
+  function renderSide() {
+    const soon = matches.filter(m => m.kt.getTime() > NOW && m.kt.getTime() < NOW + 3 * 864e5);
+    const picks = soon.map(m => [m, best(m)]).filter(([, b]) => b[0] !== "Χ").sort((a, b) => b[1][1] - a[1][1]).slice(0, 6);
+    if (picks.length) {
+      $("#sure-card").hidden = false;
+      const host = $("#sure");
+      picks.forEach(([m, b]) => {
+        const row = el("div"), t = el("div");
+        t.append(el("b", null, b[2]), el("span", null, `${b[0] === "1" ? "εντός έδρας με " + m.away : "εκτός έδρας με " + m.home}, ${whenShort(m.kt)}`));
+        const s = el("strong", null, pct(b[1])); s.append(el("small", null, "δίκαιη " + fair(b[1])));
+        row.append(t, s); host.append(row);
+      });
+    }
+    const done = Object.values(HIST.events || {}).filter(e => e.result && e.p);
+    if (done.length >= 5) {
+      $("#form-card").hidden = false;
+      const fb = done.filter(e => e.sport === "football"), bb = done.filter(e => e.sport === "basketball");
+      const host = $("#form"), tiles = el("div", "tiles"); tiles.style.gridTemplateColumns = "1fr 1fr";
+      if (fb.length) {
+        const hit = fb.filter(e => { const p = e.p, real = e.result.home > e.result.away ? "H" : e.result.home === e.result.away ? "D" : "A";
+          return [["H", p.H], ["D", p.D], ["A", p.A]].sort((a, b) => b[1] - a[1])[0][0] === real; }).length;
+        const t = el("div", "tile"); t.append(el("span", null, "Ποδόσφαιρο"), el("b", null, pct(hit / fb.length)), el("small", null, `σωστό 1Χ2 σε ${fb.length} αγώνες`)); tiles.append(t);
+      }
+      if (bb.length) {
+        const hit = bb.filter(e => (e.p.H >= 0.5) === (e.result.home > e.result.away)).length;
+        const t = el("div", "tile"); t.append(el("span", null, "Μπάσκετ"), el("b", null, pct(hit / bb.length)), el("small", null, `σωστός νικητής σε ${bb.length}`)); tiles.append(t);
+      }
+      host.append(tiles);
+    }
+  }
+
+  /* ---------- tennis ---------- */
   const elo = DATA.elo && DATA.elo.players && DATA.elo.players.length > 1 ? DATA.elo : null;
   if (!elo) $("#tab-tennis").hidden = true;
   const SURF = [["h", "Σκληρό"], ["c", "Χώμα"], ["g", "Χόρτο"]];
   let surf = "h";
-  function fillSelect(s, def) {
-    elo.players.forEach((p, i) => { const o = el("option", null, `${i + 1}. ${p.n}`); o.value = String(i); s.append(o); });
-    s.value = String(def);
-  }
-  function blended(p) { return (p.e + p[surf]) / 2; }
   function renderDuel() {
-    const a = elo.players[+$("#pA").value], b = elo.players[+$("#pB").value];
-    const out = $("#duel-out"); out.textContent = "";
+    const a = elo.players[+$("#pA").value], b = elo.players[+$("#pB").value], out = $("#duel-out");
+    out.textContent = "";
     if (a === b) { out.append(el("p", "hint", "Διάλεξε δύο διαφορετικούς παίκτες.")); return; }
-    const ea = blended(a), eb = blended(b), p = eloProb(ea, eb);
-    const big = el("div", "big");
-    const L = el("div"); L.append(el("span", "p h", pct1(p)), el("small", null, `${a.n} · δίκαιη ${fair(p)}`));
-    const R = el("div"); R.append(el("span", "p w", pct1(1 - p)), el("small", null, `${b.n} · δίκαιη ${fair(1 - p)}`));
+    const ea = (a.e + a[surf]) / 2, eb = (b.e + b[surf]) / 2, p = eloProb(ea, eb);
+    const big = el("div", "tbig");
+    const L = el("div"); L.append(el("span", "p h", pct1(p)), el("small", null, `${a.n}, δίκαιη απόδοση ${fair(p)}`));
+    const R = el("div"); R.append(el("span", "p a", pct1(1 - p)), el("small", null, `${b.n}, δίκαιη απόδοση ${fair(1 - p)}`));
     big.append(L, R);
-    const bar = bar3(p, 0, 1 - p); bar.classList.add("two");
-    const sname = SURF.find(s => s[0] === surf)[1].toLowerCase();
-    const note = el("p", "hint", `Elo για ${sname}: ${ea.toFixed(0)} έναντι ${eb.toFixed(0)} (διαφορά ${Math.abs(ea - eb).toFixed(0)}). Αγώνας 2 νικηφόρων σετ.`);
-    out.append(big, bar, note);
+    const bar = pbar({ H: p, D: 0, A: 1 - p }); bar.style.height = "12px";
+    out.append(big, bar, el("p", "hint", `Elo για ${SURF.find(s => s[0] === surf)[1].toLowerCase()}: ${ea.toFixed(0)} έναντι ${eb.toFixed(0)}. Αγώνας 2 νικηφόρων σετ.`));
   }
-  function renderSurfaces() {
-    const g = $("#surfaces"); g.textContent = "";
-    SURF.forEach(([k, label]) => {
-      const c = el("button", "chip", label); c.type = "button"; c.setAttribute("aria-pressed", String(surf === k));
-      c.addEventListener("click", () => { surf = k; renderSurfaces(); renderDuel(); });
-      g.append(c);
+  function initTennis() {
+    ["pA", "pB"].forEach((id, k) => {
+      const s = $("#" + id);
+      elo.players.forEach((p, i) => { const o = el("option", null, `${i + 1}. ${p.n}`); o.value = String(i); s.append(o); });
+      const want = elo.players.findIndex(p => p.n === (k ? "Arthur Fils" : "Stefanos Tsitsipas"));
+      s.value = String(want >= 0 ? want : k);
+      s.addEventListener("change", renderDuel);
     });
-  }
-  function renderEloTable() {
-    const t = $("#elo-tbl");
-    const hr = el("tr"); ["Παίκτης", "Συνολικό", "Σκληρό", "Χώμα", "Χόρτο"].forEach(h => hr.append(el("th", null, h)));
-    const thead = el("thead"); thead.append(hr); t.append(thead);
+    const sw = $("#surfs");
+    const drawS = () => { sw.textContent = ""; SURF.forEach(([k, l]) => { const c = el("button", "lg", l); c.type = "button"; c.setAttribute("aria-pressed", String(surf === k)); c.addEventListener("click", () => { surf = k; drawS(); renderDuel(); }); sw.append(c); }); };
+    drawS(); renderDuel();
+    const t = $("#elo-tbl"), hr = el("tr");
+    ["Παίκτης", "Συνολικό", "Σκληρό", "Χώμα", "Χόρτο"].forEach(x => hr.append(el("th", null, x)));
+    const th = el("thead"); th.append(hr); t.append(th);
     const tb = el("tbody");
     elo.players.slice(0, 20).forEach((p, i) => {
-      const tr = el("tr");
-      tr.append(el("td", null, `${i + 1}. ${p.n}`), el("td", null, p.e.toFixed(0)), el("td", null, p.h.toFixed(0)), el("td", null, p.c.toFixed(0)), el("td", null, p.g.toFixed(0)));
+      const tr = el("tr"); tr.append(el("td", "t", `${i + 1}. ${p.n}`));
+      [p.e, p.h, p.c, p.g].forEach(v => tr.append(el("td", null, v.toFixed(0))));
       tb.append(tr);
     });
     t.append(tb);
-    const d = new Date(elo.asOf + "T12:00:00Z");
-    $("#elo-note").textContent = `Οι 20 πρώτοι του ATP κατά Elo, ενημέρωση ${d.toLocaleDateString("el-GR")} (${elo.source}). Ο υπολογιστής πάνω περιλαμβάνει τους 60 πρώτους.`;
-  }
-  function initTennis() {
-    const ia = elo.players.findIndex(p => p.n === "Stefanos Tsitsipas");
-    const ib = elo.players.findIndex(p => p.n === "Arthur Fils");
-    fillSelect($("#pA"), ia >= 0 ? ia : 0);
-    fillSelect($("#pB"), ib >= 0 ? ib : 1);
-    $("#pA").addEventListener("change", renderDuel);
-    $("#pB").addEventListener("change", renderDuel);
-    renderSurfaces(); renderDuel(); renderEloTable();
+    $("#elo-note").textContent = `Οι 20 πρώτοι του ATP κατά Elo (Tennis Abstract, ${new Date(elo.asOf + "T12:00:00Z").toLocaleDateString("el-GR")}). Στον υπολογιστή υπάρχουν οι 60 πρώτοι.`;
   }
 
-  /* ---------- Record (history.json) ---------- */
+  /* ---------- record ---------- */
   function renderRecord() {
-    const host = $("#record"); host.textContent = "";
-    const all = Object.values(HIST.events || {}).filter(e => e.result && e.p);
+    const host = $("#record"), all = Object.values(HIST.events || {}).filter(e => e.result && e.p);
     if (!all.length) {
       const e = el("div", "empty");
       e.append(el("h3", null, "Το ιστορικό γεμίζει μόλις τελειώσουν οι πρώτοι αγώνες"),
-        el("p", null, "Κάθε πρόβλεψη κρατιέται όπως ήταν λίγο πριν από τη σέντρα ή το τζάμπολ. Μετά τον αγώνα μπαίνει δίπλα το αποτέλεσμα, και εδώ φαίνεται πόσο συχνά βγήκε το πιο πιθανό σημείο και πόσο καλά ήταν βαθμονομημένες οι πιθανότητες (Brier score)."));
+        el("p", null, "Κάθε πρόβλεψη κρατιέται όπως ήταν πριν από τη σέντρα ή το τζάμπολ. Μετά τον αγώνα μπαίνει δίπλα το αποτέλεσμα, και εδώ φαίνεται πόσο συχνά βγήκε το πιο πιθανό σημείο."));
       host.append(e); return;
     }
-    const tile = (lab, val, sub) => { const t = el("div", "tile"); t.append(el("span", null, lab), el("b", null, val), el("small", null, sub)); return t; };
-    const fb = all.filter(e => e.sport === "football"), bb = all.filter(e => e.sport === "basketball");
-    const tiles = el("div", "tiles");
+    const tl = (lab, val, sub) => { const t = el("div", "tile"); t.append(el("span", null, lab), el("b", null, val), el("small", null, sub)); return t; };
+    const out = r => r.home > r.away ? "H" : r.home === r.away ? "D" : "A";
+    const fb = all.filter(e => e.sport === "football"), bb = all.filter(e => e.sport === "basketball"), tiles = el("div", "tiles");
     if (fb.length) {
       let hit = 0, br = 0, ou = 0;
-      fb.forEach(e => {
-        const real = outcome1x2(e.result.home, e.result.away), p = e.p;
-        const pick = [["H", p.H], ["D", p.D], ["A", p.A]].sort((a, b) => b[1] - a[1])[0][0];
-        if (pick === real) hit++;
+      fb.forEach(e => { const real = out(e.result), p = e.p;
+        if ([["H", p.H], ["D", p.D], ["A", p.A]].sort((a, b) => b[1] - a[1])[0][0] === real) hit++;
         br += (p.H - (real === "H")) ** 2 + (p.D - (real === "D")) ** 2 + (p.A - (real === "A")) ** 2;
-        if ((p.O25 >= 0.5) === (e.result.home + e.result.away > 2.5)) ou++;
-      });
-      tiles.append(tile("Ποδόσφαιρο · σωστό 1Χ2", pct(hit / fb.length), `${hit} από ${fb.length} αγώνες`),
-        tile("Ποδόσφαιρο · Over/Under 2,5", pct(ou / fb.length), `${ou} από ${fb.length}`),
-        tile("Ποδόσφαιρο · Brier", (br / fb.length).toFixed(3).replace(".", ","), "μικρότερο = καλύτερο · στην τύχη ≈ 0,667"));
+        if ((p.O25 >= 0.5) === (e.result.home + e.result.away > 2.5)) ou++; });
+      tiles.append(tl("Ποδόσφαιρο, σωστό 1Χ2", pct(hit / fb.length), `${hit} από ${fb.length} αγώνες`),
+        tl("Ποδόσφαιρο, Over/Under 2,5", pct(ou / fb.length), `${ou} από ${fb.length}`),
+        tl("Ποδόσφαιρο, Brier", dec(br / fb.length, 3), "μικρότερο είναι καλύτερο, στην τύχη 0,667"));
     }
     if (bb.length) {
       let hit = 0, br = 0;
-      bb.forEach(e => {
-        const homeWon = e.result.home > e.result.away;
-        if ((e.p.H >= 0.5) === homeWon) hit++;
-        br += 2 * (e.p.H - (homeWon ? 1 : 0)) ** 2;
-      });
-      tiles.append(tile("Μπάσκετ · σωστός νικητής", pct(hit / bb.length), `${hit} από ${bb.length} αγώνες`),
-        tile("Μπάσκετ · Brier", (br / bb.length).toFixed(3).replace(".", ","), "μικρότερο = καλύτερο · στην τύχη = 0,500"));
+      bb.forEach(e => { const hw = e.result.home > e.result.away; if ((e.p.H >= 0.5) === hw) hit++; br += 2 * (e.p.H - (hw ? 1 : 0)) ** 2; });
+      tiles.append(tl("Μπάσκετ, σωστός νικητής", pct(hit / bb.length), `${hit} από ${bb.length} αγώνες`),
+        tl("Μπάσκετ, Brier", dec(br / bb.length, 3), "μικρότερο είναι καλύτερο, στην τύχη 0,500"));
     }
-    host.append(tiles);
-
-    const recent = all.slice().sort((a, b) => b.kickoff.localeCompare(a.kickoff)).slice(0, 60);
-    const wrap = el("div", "panel"); wrap.style.gap = "10px";
-    const h = el("h3", null, "Τελευταίοι αγώνες"); h.style.cssText = "margin:0;font-family:var(--display);font-size:19px";
+    const panel = el("div", "panel"); panel.style.gap = "10px";
+    panel.append(el("h2", null, "Τελευταίοι αγώνες"));
     const tw = el("div"); tw.style.overflowX = "auto";
-    const t = el("table", "elo-tbl rec");
-    const hr = el("tr"); ["Ημ/νία", "Αγώνας", "Πρόβλεψη", "Τελικό", ""].forEach(x => hr.append(el("th", null, x)));
+    const t = el("table", "tbl"), hr = el("tr");
+    ["Ημέρα", "Αγώνας", "Πρόβλεψη", "Τελικό", ""].forEach(x => hr.append(el("th", null, x)));
     const th = el("thead"); th.append(hr); t.append(th);
-    const tb = el("tbody");
-    const dshort = new Intl.DateTimeFormat("el-GR", { timeZone: "Europe/Athens", day: "numeric", month: "numeric" });
-    recent.forEach(e => {
+    const tb = el("tbody"), dshort = new Intl.DateTimeFormat("el-GR", { timeZone: TZ, day: "numeric", month: "numeric" });
+    all.sort((a, b) => b.kickoff.localeCompare(a.kickoff)).slice(0, 80).forEach(e => {
       let pick, prob, ok;
       if (e.sport === "football") {
-        const real = outcome1x2(e.result.home, e.result.away);
-        const best = [["1", "H", e.p.H], ["Χ", "D", e.p.D], ["2", "A", e.p.A]].sort((a, b) => b[2] - a[2])[0];
-        pick = best[0]; prob = best[2]; ok = best[1] === real;
-      } else {
-        const homeFav = e.p.H >= 0.5;
-        pick = homeFav ? "1" : "2"; prob = Math.max(e.p.H, e.p.A); ok = homeFav === (e.result.home > e.result.away);
-      }
-      const tr = el("tr");
-      const match = el("td"); match.append(el("span", null, `${e.home} – ${e.away}`), el("small", null, e.league));
-      tr.append(el("td", null, dshort.format(new Date(e.kickoff))), match, el("td", null, `${pick} · ${pct(prob)}`),
+        const b = [["1", "H", e.p.H], ["Χ", "D", e.p.D], ["2", "A", e.p.A]].sort((a, b) => b[2] - a[2])[0];
+        pick = b[0]; prob = b[2]; ok = b[1] === out(e.result);
+      } else { const hf = e.p.H >= 0.5; pick = hf ? "1" : "2"; prob = Math.max(e.p.H, e.p.A); ok = hf === (e.result.home > e.result.away); }
+      const tr = el("tr"), mt = el("td", "t");
+      mt.append(document.createTextNode(`${e.home} – ${e.away}`), el("small", null, e.league));
+      tr.append(el("td", null, dshort.format(new Date(e.kickoff))), mt, el("td", null, `${pick}  ${pct(prob)}`),
         el("td", null, `${e.result.home}-${e.result.away}`), el("td", ok ? "ok" : "no", ok ? "✓" : "✗"));
       tb.append(tr);
     });
-    t.append(tb); tw.append(t); wrap.append(h, tw); host.append(wrap);
+    t.append(tb); tw.append(t); panel.append(tw);
+    host.append(tiles, panel);
   }
 
-  /* ---------- Tabs & masthead ---------- */
+  /* ---------- tabs, stamp ---------- */
+  const TABS = ["football", "basketball", "tennis", "record", "method"];
   function showTab(name) {
     document.querySelectorAll("nav.tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === name)));
-    ["football", "basketball", "tennis", "record", "method"].forEach(t => { $("#view-" + t).hidden = t !== name; });
+    TABS.forEach(t => { $("#view-" + t).hidden = t !== name; });
     store.set("pp-tab", name);
   }
   document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
 
-  function renderStamp() {
-    const s = $("#stamp");
-    const upcoming = fbMatches.filter(m => !m.result).length + bbMatches.filter(m => !m.result).length;
-    const items = [
-      ["Αγώνες", String(upcoming)],
-      ["Διοργανώσεις", String(leagues.length + leaguesOf(bbMatches).length)],
-      ["Ενημέρωση", new Date(DATA.updated).toLocaleString("el-GR", { timeZone: "Europe/Athens", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })],
-    ];
-    items.forEach(([k, v]) => { const sp = el("span"); sp.append(document.createTextNode(k + ": "), el("b", null, v)); s.append(sp); });
-    $("#sources").textContent = "Ποδόσφαιρο και NBA: ESPN. EuroLeague και EuroCup: EuroLeague Basketball. Βαθμολογίες Elo τένις: Tennis Abstract." +
-      ((DATA.problems || []).length ? ` Στην τελευταία ενημέρωση δεν ήρθαν νέα δεδομένα για: ${DATA.problems.join(", ")}.` : "");
-  }
+  const upd = new Date(DATA.updated);
+  $("#stamp").textContent = "";
+  $("#stamp").append(document.createTextNode(`${matches.length} αγώνες σε ${new Set(matches.map(m => m.league)).size} διοργανώσεις. Ενημέρωση `),
+    el("b", null, upd.toLocaleString("el-GR", { timeZone: TZ, day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })));
+  $("#sources").textContent = "Πηγές: ESPN (ποδόσφαιρο, NBA), EuroLeague Basketball (EuroLeague, EuroCup), Tennis Abstract (Elo τένις)." +
+    ((DATA.problems || []).length ? ` Στην τελευταία ενημέρωση δεν ήρθαν νέα δεδομένα για: ${DATA.problems.join(", ")}.` : "");
 
-  renderStamp();
-  renderLegend();
-  leagueTabs("football", fbMatches, "#fb-leagues", "#fb-note", renderFootball);
-  leagueTabs("basketball", bbMatches, "#bb-leagues", "#bb-note", renderBasketball);
-  renderFootball();
-  renderBasketball();
+  views.football = setupSport("football");
+  views.basketball = setupSport("basketball");
+  if (!bySport("basketball").length && !LEAGUES.some(l => l.sport === "basketball")) $("#tab-basketball").hidden = true;
+  renderStage();
+  renderSide();
   if (elo) initTennis();
   renderRecord();
-  const hash = (location.hash || "").replace("#", "");
-  const saved = store.get("pp-tab");
-  const start = ["football", "basketball", "tennis", "record", "method"].includes(hash) ? hash : (saved || "football");
-  showTab(["football", "basketball", "tennis", "record", "method"].includes(start) ? start : "football");
+  const hash = (location.hash || "").slice(1), saved = store.get("pp-tab");
+  showTab(TABS.includes(hash) ? hash : TABS.includes(saved) && !$("#tab-" + saved).hidden ? saved : "football");
 })();
 </script>
 </body>
