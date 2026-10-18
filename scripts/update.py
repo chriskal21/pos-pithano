@@ -73,7 +73,7 @@ ORDER = [l["name"] for l in FOOTBALL if l.get("show", True)] + [l["name"] for l 
 
 HORIZON_DAYS = 8          # πόσες μέρες μπροστά δείχνει η σελίδα
 FALLBACK_DAYS = 21        # αν δεν υπάρχει αγώνας στις 8 μέρες, ψάχνει ως εδώ (π.χ. διακοπή εθνικών ομάδων)
-BACKFILL_DAYS = 460       # πόσο πίσω κοιτάει την πρώτη φορά
+BACKFILL_DAYS = 330       # πόσο πίσω κοιτάει την πρώτη φορά (η πρώτη εκτέλεση κρατά ~20–30 λεπτά)
 HALF_LIFE = 180           # σε μέρες: ένας αγώνας πριν από 6 μήνες μετράει τα μισά
 RHO = -0.10               # διόρθωση Dixon–Coles
 FB_PRIOR = 4.0            # βάρος (σε αγώνες) της αφετηρίας κάθε ομάδας
@@ -145,13 +145,20 @@ def parse_dt(s: str) -> dt.datetime | None:
 
 
 # ---------------------------------------------------- ESPN
-ESPN = "https://site.api.espn.com/apis/site/v2/sports/{sport}/{slug}/scoreboard?dates={a}-{b}&limit=1000"
+# Το ESPN απαντά αξιόπιστα μόνο σε ερωτήματα για ΜΙΑ μέρα (τα εύρη ημερομηνιών απορρίπτονται).
+# Γι' αυτό: 1) διαβάζουμε το «ημερολόγιο» της σεζόν (ποιες μέρες έχουν αγώνες),
+#           2) ρωτάμε μόνο αυτές τις μέρες, και 3) όσες έχουν κλείσει δεν τις ξαναρωτάμε ποτέ.
+ESPN = "https://site.api.espn.com/apis/site/v2/sports/{sport}/{slug}/scoreboard"
 
 
-def espn_events(sport: str, slug: str, start: dt.date, end: dt.date) -> list[dict]:
-    url = ESPN.format(sport=sport, slug=slug, a=start.strftime("%Y%m%d"), b=end.strftime("%Y%m%d"))
+def espn_board(sport: str, slug: str, day: dt.date | None = None) -> dict:
+    url = ESPN.format(sport=sport, slug=slug) + (f"?dates={day:%Y%m%d}" if day else "")
+    return get_json(url, pause=0.15)
+
+
+def parse_events(board: dict, sport: str, slug: str) -> list[dict]:
     out = []
-    for ev in get_json(url).get("events") or []:
+    for ev in board.get("events") or []:
         try:
             comp = ev["competitions"][0]
             teams = {c["homeAway"]: c for c in comp["competitors"]}
@@ -179,34 +186,78 @@ def espn_events(sport: str, slug: str, start: dt.date, end: dt.date) -> list[dic
     return out
 
 
-def months(start: dt.date, end: dt.date):
-    d = start.replace(day=1)
-    while d <= end:
-        nxt = (d.replace(day=28) + dt.timedelta(days=4)).replace(day=1)
-        yield d, min(nxt - dt.timedelta(days=1), end)
-        d = nxt
+def calendar_days(board: dict) -> set[str]:
+    """Οι μέρες (YYYY-MM-DD) με αγώνες, από το πεδίο calendar της απάντησης."""
+    days = set()
+
+    def add(s):
+        d = parse_dt(s) if isinstance(s, str) else None
+        if d:
+            days.add(d.date().isoformat())
+
+    for lg in board.get("leagues") or []:
+        for c in lg.get("calendar") or []:
+            if isinstance(c, str):
+                add(c)
+            elif isinstance(c, dict):
+                items = c.get("entries") or [c]
+                for it in items:
+                    a, b = parse_dt(it.get("startDate") or ""), parse_dt(it.get("endDate") or "")
+                    if a and b and (b - a).days <= 10:
+                        d = a.date()
+                        while d <= b.date():
+                            days.add(d.isoformat()); d += dt.timedelta(days=1)
+                    elif a:
+                        days.add(a.date().isoformat())
+    return days
 
 
-def refresh_espn(cache: dict, sport: str, slug: str) -> None:
-    """Γεμίζει/ανανεώνει cache['leagues'][slug] με αγώνες ESPN."""
-    lc = cache["leagues"].setdefault(slug, {"months": [], "events": {}})
+def refresh_espn(cache: dict, sport: str, slug: str, show: bool = True) -> None:
+    """Γεμίζει/ανανεώνει cache['leagues'][slug]. Ρίχνει FetchError μόνο αν δεν απαντά καθόλου η διοργάνωση."""
+    lc = cache["leagues"].setdefault(slug, {})
+    lc.setdefault("events", {}); lc.setdefault("final", []); lc.setdefault("prevcal", None)
+    lc.pop("months", None)
     today = NOW.date()
-    jobs = []
-    for a, b in months(today - dt.timedelta(days=BACKFILL_DAYS), today - dt.timedelta(days=15)):
-        key = a.strftime("%Y-%m")
-        if key not in lc["months"]:
-            jobs.append((a, b, key))
-    jobs.append((today - dt.timedelta(days=14), today + dt.timedelta(days=FALLBACK_DAYS), None))
-    for a, b, key in jobs:
-        evs = espn_events(sport, slug, a, b)
+
+    board = espn_board(sport, slug)                       # τρέχουσα μέρα + ημερολόγιο τρέχουσας σεζόν
+    for e in parse_events(board, sport, slug):
+        lc["events"][e["id"]] = e
+    days = calendar_days(board)
+    if lc["prevcal"] is None:                            # ημερολόγιο περσινής σεζόν, μία φορά
+        try:
+            lc["prevcal"] = sorted(calendar_days(espn_board(sport, slug, today - dt.timedelta(days=300))))
+        except FetchError:
+            lc["prevcal"] = []
+    days |= set(lc["prevcal"])
+    if not days:                                          # χωρίς ημερολόγιο: κοίτα απλώς γύρω από σήμερα
+        days = {(today + dt.timedelta(days=k)).isoformat() for k in range(-3, 11)}
+
+    lo = (today - dt.timedelta(days=BACKFILL_DAYS)).isoformat()
+    hi = (today + dt.timedelta(days=FALLBACK_DAYS if show else 0)).isoformat()
+    final = set(lc["final"])
+    todo = sorted((d for d in days if lo <= d <= hi and d not in final), reverse=True)   # πρώτα τα πρόσφατα
+    fails = 0
+    for d in todo:
+        day = dt.date.fromisoformat(d)
+        try:
+            evs = parse_events(espn_board(sport, slug, day), sport, slug)
+        except FetchError as e:
+            fails += 1
+            if fails == 1:
+                print(f"    ({slug} {d}: {e})")
+            if fails >= 8:
+                print(f"    {slug}: πολλές αποτυχίες, συνεχίζω στην επόμενη εκτέλεση")
+                break
+            continue
+        fails = 0
         for e in evs:
             lc["events"][e["id"]] = e
-        if key and b < today - dt.timedelta(days=15):
-            lc["months"].append(key)
-    # καθάρισε ό,τι είναι πολύ παλιό
+        if day < today - dt.timedelta(days=2):          # τα αποτελέσματα δεν αλλάζουν πια
+            final.add(d)
+
     cutoff = (NOW - dt.timedelta(days=BACKFILL_DAYS + 30)).isoformat()
     lc["events"] = {k: v for k, v in lc["events"].items() if v["when"] >= cutoff}
-    lc["months"] = [m for m in lc["months"] if m >= cutoff[:7]]
+    lc["final"] = sorted(x for x in final if x >= cutoff[:10])
 
 
 # ---------------------------------------------------- EuroLeague API
@@ -432,11 +483,13 @@ def main() -> int:
 
     # 1. λήψη
     for lg in FOOTBALL:
+        print(f"↓ {lg['slug']}", flush=True)
         try:
-            refresh_espn(cache, "soccer", lg["slug"])
+            refresh_espn(cache, "soccer", lg["slug"], show=lg.get("show", True))
         except FetchError as e:
             print(f"  ! {lg['slug']}: {e}")
             if lg.get("show", True): problems.append(lg["name"])
+        cache_p.write_text(json.dumps(cache, ensure_ascii=False, separators=(",", ":")))   # πρόοδος
     for lg in BASKETBALL:
         try:
             if lg["kind"] == "espn":
