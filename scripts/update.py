@@ -498,17 +498,161 @@ def played_count(events, teams):
     return max((c[t] for t in teams), default=0)
 
 
+
+# ------------------------------------------------------------------ φόρμα, βαθμολογίες, προσομοίωση
+EXTRA_NAMES = {
+    "uefa.champions_qual": "Προκριματικά Champions League", "uefa.europa_qual": "Προκριματικά Europa League",
+    "uefa.europa.conf_qual": "Προκριματικά Conference League", "eng.2": "Championship", "aut.1": "Αυστρία",
+    "sui.1": "Ελβετία", "den.1": "Δανία", "nor.1": "Νορβηγία", "swe.1": "Σουηδία", "pol.1": "Πολωνία",
+    "cze.1": "Τσεχία", "cro.1": "Κροατία", "srb.1": "Σερβία", "cyp.1": "Κύπρος", "isr.1": "Ισραήλ",
+    "rou.1": "Ρουμανία", "ukr.1": "Ουκρανία", "hun.1": "Ουγγαρία", "svk.1": "Σλοβακία", "svn.1": "Σλοβενία",
+    "bul.1": "Βουλγαρία", "E": "EuroLeague", "U": "EuroCup", "nba": "NBA",
+}
+# πρωταθλήματα με καθαρό διπλό γύρο (όλοι με όλους εντός-εκτός) στην κανονική διάρκεια: εκεί η προσομοίωση
+# ξέρει ακριβώς ποιοι αγώνες απομένουν
+SIM_LEAGUES = {"eng.1", "esp.1", "ita.1", "ger.1", "fra.1", "ned.1", "por.1", "tur.1", "gre.1", "bel.1"}
+REGULAR_ONLY = {"gre.1": "Μόνο η κανονική διάρκεια: τα πλέι οφ δεν προσομοιώνονται.",
+                "bel.1": "Μόνο η κανονική διάρκεια: τα πλέι οφ δεν προσομοιώνονται."}
+SIMS = 5000
+
+
+def league_label(slug):
+    for l in FOOTBALL:
+        if l["slug"] == slug and l.get("show", True):
+            return l["name"]
+    return EXTRA_NAMES.get(slug, slug)
+
+
+def season_start(events):
+    done = sorted(e["when"] for e in events if e["done"])
+    start = done[0] if done else NOW.isoformat()
+    for a, b in zip(done, done[1:]):
+        if (dt.datetime.fromisoformat(b) - dt.datetime.fromisoformat(a)).days > 35:
+            start = b
+    return start
+
+
+def by_team(games):
+    idx = defaultdict(list)
+    for g in sorted(games, key=lambda g: g["when"], reverse=True):
+        idx[g["home"]].append(g); idx[g["away"]].append(g)
+    return idx
+
+
+def form_of(idx, t, name, n=5):
+    out = []
+    for g in idx.get(t, [])[:n]:
+        home = g["home"] == t
+        gf, ga = (g["hs"], g["as_"]) if home else (g["as_"], g["hs"])
+        out.append(dict(d=g["when"][:10], o=name(g["away"] if home else g["home"]), h=home, gf=gf, ga=ga,
+                        r="W" if gf > ga else "D" if gf == ga else "L", lg=league_label(g["league"])))
+    return out
+
+
+def stats_of(idx, t, n=10):
+    gs = idx.get(t, [])[:n]
+    if not gs:
+        return None
+    gf = sum(g["hs"] if g["home"] == t else g["as_"] for g in gs)
+    ga = sum(g["as_"] if g["home"] == t else g["hs"] for g in gs)
+    return dict(n=len(gs), gf=round(gf / len(gs), 2), ga=round(ga / len(gs), 2),
+                o25=round(sum(g["hs"] + g["as_"] > 2.5 for g in gs) / len(gs), 2),
+                btts=round(sum(g["hs"] > 0 and g["as_"] > 0 for g in gs) / len(gs), 2))
+
+
+def h2h_of(games, a, b, name, n=6):
+    pair = {a, b}
+    gs = sorted((g for g in games if {g["home"], g["away"]} == pair), key=lambda g: g["when"], reverse=True)[:n]
+    return [dict(d=g["when"][:10], h=name(g["home"]), a=name(g["away"]), hs=g["hs"], as_=g["as_"],
+                 lg=league_label(g["league"])) for g in gs]
+
+
+def standings(games):
+    s = defaultdict(lambda: [0, 0, 0, 0, 0, 0, 0])   # Αγ, Ν, Ι, Η, ΓΥ, ΓΚ, Β
+    for g in games:
+        for t, gf, ga in ((g["home"], g["hs"], g["as_"]), (g["away"], g["as_"], g["hs"])):
+            r = s[t]; r[0] += 1; r[4] += gf; r[5] += ga
+            if gf > ga: r[1] += 1; r[6] += 3
+            elif gf == ga: r[2] += 1; r[6] += 1
+            else: r[3] += 1
+    return s
+
+
+def rank_order(s):
+    return sorted(s, key=lambda t: (s[t][6], s[t][4] - s[t][5], s[t][4]), reverse=True)
+
+
+def simulate(teams, season_games, lam, n=SIMS):
+    """Monte Carlo της υπόλοιπης κανονικής διάρκειας. lam(h, a) -> (λ γηπεδούχου, λ φιλοξενούμενου)."""
+    import random
+    rnd = random.Random(20261019)
+    teams = sorted(teams)
+    ix = {t: i for i, t in enumerate(teams)}
+    played = {(g["home"], g["away"]) for g in season_games}
+    st = standings(season_games)
+    base = [st[t][6] if t in st else 0 for t in teams]
+    gd = [float(st[t][4] - st[t][5]) if t in st else 0.0 for t in teams]
+    rem = []
+    for h in teams:
+        for a in teams:
+            if h != a and (h, a) not in played:
+                lh, la = lam(h, a)
+                p = fb_probs(lh, la)
+                rem.append((ix[h], ix[a], p["H"], p["H"] + p["D"]))
+                gd[ix[h]] += lh - la; gd[ix[a]] += la - lh
+    T = len(teams)
+    top1 = [0] * T; top4 = [0] * T; bot3 = [0] * T; pts_sum = [0.0] * T
+    for _ in range(n):
+        pts = base[:]
+        for i, j, ph, phd in rem:
+            r = rnd.random()
+            if r < ph: pts[i] += 3
+            elif r < phd: pts[i] += 1; pts[j] += 1
+            else: pts[j] += 3
+        order = sorted(range(T), key=lambda k: (pts[k], gd[k] + rnd.random() * 2), reverse=True)
+        top1[order[0]] += 1
+        for k in order[:4]: top4[k] += 1
+        for k in order[-3:]: bot3[k] += 1
+        for k in range(T): pts_sum[k] += pts[k]
+    return {t: dict(xp=round(pts_sum[i] / n, 1), p1=round(top1[i] / n, 4), p4=round(top4[i] / n, 4),
+                    pb=round(bot3[i] / n, 4)) for t, i in ix.items()}, len(rem)
+
+
+def backtest(fb_games, team_league, shown, weeks=10):
+    """Αναδρομικός έλεγχος: για κάθε μία από τις τελευταίες εβδομάδες, το μοντέλο βλέπει μόνο τους
+    προηγούμενους αγώνες και προβλέπει τους αγώνες της εβδομάδας."""
+    items = []
+    end = NOW - dt.timedelta(days=NOW.weekday(), hours=NOW.hour, minutes=NOW.minute)
+    for k in range(weeks, 0, -1):
+        ws, we = end - dt.timedelta(days=7 * k), end - dt.timedelta(days=7 * (k - 1))
+        train = [g for g in fb_games if g["when"] < ws.isoformat()]
+        test = [g for g in fb_games if ws.isoformat() <= g["when"] < we.isoformat() and g["league"] in shown]
+        if len(train) < 500 or not test:
+            continue
+        wf = lambda w, ws=ws: 0.5 ** (max((ws - dt.datetime.fromisoformat(w)).total_seconds() / 86400, 0) / HALF_LIFE)
+        mu, home, att, dfn = fit_football(train, team_league, weight_fn=wf, iters=60)
+        d = (math.exp(DEFAULT_LEVEL / 2), math.exp(-DEFAULT_LEVEL / 2))
+        for g in test:
+            hf = 1.0 if g["neutral"] else home.get(g["league"], home["_all"])
+            lh = mu * hf * att.get(g["home"], d[0]) * dfn.get(g["away"], d[1])
+            la = mu * att.get(g["away"], d[0]) * dfn.get(g["home"], d[1])
+            items.append(dict(kickoff=g["when"], league=league_label(g["league"]), sport="football",
+                              hid=g["home"], aid=g["away"], p=fb_probs(lh, la), result=dict(home=g["hs"], away=g["as_"])))
+    return items
+
+
 def main() -> int:
     SITE.mkdir(exist_ok=True); DATA.mkdir(exist_ok=True)
     cache_p, data_p, hist_p = DATA / "cache.json", SITE / "data.json", SITE / "history.json"
+    tables_p = SITE / "tables.json"
     cache = json.loads(cache_p.read_text()) if cache_p.exists() else {"leagues": {}}
     old = json.loads(data_p.read_text()) if data_p.exists() else {}
     history = json.loads(hist_p.read_text()) if hist_p.exists() else {"events": {}}
     hist = history.setdefault("events", {})
     problems = []
 
-    # 1. λήψη
-    for lg in FOOTBALL:
+    # 1. λήψη (SKIP_FETCH=1: μόνο υπολογισμός με ό,τι υπάρχει ήδη, για δοκιμές)
+    for lg in ([] if os.environ.get("SKIP_FETCH") else FOOTBALL):
         print(f"↓ {lg['slug']}", flush=True)
         try:
             refresh_espn(cache, "soccer", lg["slug"], show=lg.get("show", True))
@@ -516,7 +660,7 @@ def main() -> int:
             print(f"  ! {lg['slug']}: {e}")
             if lg.get("show", True): problems.append(lg["name"])
         cache_p.write_text(json.dumps(cache, ensure_ascii=False, separators=(",", ":")))   # πρόοδος
-    for lg in BASKETBALL:
+    for lg in ([] if os.environ.get("SKIP_FETCH") else BASKETBALL):
         try:
             if lg["kind"] == "espn":
                 refresh_espn(cache, "basketball", lg["slug"])
@@ -553,9 +697,52 @@ def main() -> int:
             greek_teams.add(t)
     fb_name = lambda t: greek(names.get(t, t)) if t in greek_teams else names.get(t, t)
 
+    tables = []
     if fb_games:
         mu, home, att, dfn = fit_football(fb_games, team_league)
         print(f"• ποδόσφαιρο: {len(fb_games)} αγώνες στο μοντέλο, μ={mu:.2f}, έδρα×{home['_all']:.2f}")
+        dflt = (math.exp(DEFAULT_LEVEL / 2), math.exp(-DEFAULT_LEVEL / 2))
+        lam = lambda h, a, slug, neutral=False: (
+            mu * (1.0 if neutral else home.get(slug, home["_all"])) * att.get(h, dflt[0]) * dfn.get(a, dflt[1]),
+            mu * att.get(a, dflt[0]) * dfn.get(h, dflt[1]))
+        fidx = by_team(fb_games)
+        # βαθμολογίες και προσομοίωση
+        pos = {}
+        for lg in FOOTBALL:
+            if not lg.get("show", True) or lg.get("cup"):
+                continue
+            evs = list(cache["leagues"].get(lg["slug"], {}).get("events", {}).values())
+            start = season_start(evs)
+            sg = [e for e in evs if e["done"] and e["hs"] is not None and e["when"] >= start]
+            teams = {e["home"] for e in evs if e["when"] >= start} | {e["away"] for e in evs if e["when"] >= start}
+            if not sg or len(teams) < 6:
+                continue
+            st = standings(sg)
+            order = rank_order({t: st[t] for t in teams} if all(t in st for t in teams) else
+                               {t: st.get(t, [0] * 7) for t in teams})
+            sim, left = ({}, 0)
+            if lg["slug"] in SIM_LEAGUES:
+                sim, left = simulate(teams, sg, lambda h, a, s=lg["slug"]: lam(h, a, s))
+            lidx = by_team(sg)
+            rows = []
+            for r, tm in enumerate(order, 1):
+                v = st.get(tm, [0] * 7)
+                rows.append(dict(t=fb_name(tm), p=v[0], w=v[1], d=v[2], l=v[3], gf=v[4], ga=v[5], pts=v[6],
+                                 form="".join(x["r"] for x in form_of(lidx, tm, fb_name)), **sim.get(tm, {})))
+                pos[tm] = dict(lg=lg["name"], rank=r, of=len(order), pts=v[6], p=v[0])
+            note = REGULAR_ONLY.get(lg["slug"], "")
+            if sim:
+                note = (f"Από {SIMS:,} προσομοιώσεις των {left} αγώνων που απομένουν. ".replace(",", ".") + note).strip()
+            tables.append(dict(name=lg["name"], cc=lg["cc"], sim=bool(sim), note=note, rows=rows))
+        shown_slugs = {l["slug"] for l in FOOTBALL if l.get("show", True)}
+        week = NOW.strftime("%G-W%V")
+        if history.get("bt", {}).get("week") != week:
+            print("• αναδρομικός έλεγχος…", flush=True)
+            items = backtest(fb_games, team_league, shown_slugs)
+            for it in items:
+                it["home"], it["away"] = fb_name(it.pop("hid")), fb_name(it.pop("aid"))
+            history["bt"] = dict(week=week, items=items)
+            print(f"  {len(items)} αγώνες")
         for lg in FOOTBALL:
             if not lg.get("show", True):
                 continue
@@ -565,12 +752,17 @@ def main() -> int:
                 continue
             for e in ups:
                 hf = 1.0 if e["neutral"] else home.get(lg["slug"], home["_all"])
-                dflt = (math.exp(DEFAULT_LEVEL / 2), math.exp(-DEFAULT_LEVEL / 2))
                 ah, dh = att.get(e["home"], dflt[0]), dfn.get(e["home"], dflt[1])
                 aa, da = att.get(e["away"], dflt[0]), dfn.get(e["away"], dflt[1])
                 lh, la = round(mu * hf * ah * da, 3), round(mu * aa * dh, 3)
                 m = dict(id=e["id"], sport="football", league=lg["name"], country=lg["cc"], kickoff=e["when"],
-                         home=fb_name(e["home"]), away=fb_name(e["away"]), lambdaHome=lh, lambdaAway=la)
+                         home=fb_name(e["home"]), away=fb_name(e["away"]), lambdaHome=lh, lambdaAway=la,
+                         info=dict(form=[form_of(fidx, e["home"], fb_name), form_of(fidx, e["away"], fb_name)],
+                                   stats=[stats_of(fidx, e["home"]), stats_of(fidx, e["away"])],
+                                   h2h=h2h_of(fb_games, e["home"], e["away"], fb_name),
+                                   pos=[pos.get(e["home"]), pos.get(e["away"])],
+                                   lvl=[[league_label(team_league[x]), LEAGUE_LEVEL.get(team_league[x])] if x in team_league else None
+                                        for x in (e["home"], e["away"])]))
                 matches.append(m)
                 if dt.datetime.fromisoformat(e["when"]) > NOW:
                     hist[e["id"]] = dict(sport="football", league=lg["name"], kickoff=e["when"], home=m["home"],
@@ -592,12 +784,17 @@ def main() -> int:
         if not games or not ups:
             continue
         L, hca, off, dfn = fit_basketball(games)
+        bidx = by_team(games)
+        bname = lambda t: greek(names.get(t, t))
         for e in ups:
             eh = round(L + off.get(e["home"], -3) + dfn.get(e["away"], 3) + hca / 2, 1)
             ea = round(L + off.get(e["away"], -3) + dfn.get(e["home"], 3) - hca / 2, 1)
             hn, an = greek(names.get(e["home"], e["home"])), greek(names.get(e["away"], e["away"]))
             m = dict(id=e["id"], sport="basketball", league=lg["name"], country=lg["cc"], kickoff=e["when"],
-                     home=hn, away=an, expHome=eh, expAway=ea, sd=lg["sd"])
+                     home=hn, away=an, expHome=eh, expAway=ea, sd=lg["sd"],
+                     info=dict(form=[form_of(bidx, e["home"], bname), form_of(bidx, e["away"], bname)],
+                               stats=[stats_of(bidx, e["home"]), stats_of(bidx, e["away"])],
+                               h2h=h2h_of(games, e["home"], e["away"], bname)))
             matches.append(m)
             if dt.datetime.fromisoformat(e["when"]) > NOW:
                 hist[e["id"]] = dict(sport="basketball", league=lg["name"], kickoff=e["when"], home=hn, away=an,
@@ -622,6 +819,8 @@ def main() -> int:
     data = dict(updated=NOW.isoformat(), matches=matches, leagues=meta, problems=problems,
                 elo=update_elo(old.get("elo")))
     data_p.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")))
+    if tables:
+        tables_p.write_text(json.dumps(dict(updated=NOW.isoformat(), leagues=tables), ensure_ascii=False, separators=(",", ":")))
     done = sum("result" in v for v in history["events"].values())
     print(f"✓ {len(matches)} αγώνες σε {len(meta)} διοργανώσεις · ιστορικό {len(history['events'])} ({done} με αποτέλεσμα)")
     return 0
