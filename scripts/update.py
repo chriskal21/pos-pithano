@@ -78,9 +78,9 @@ ORDER = [l["name"] for l in FOOTBALL if l.get("show", True)] + [l["name"] for l 
 HORIZON_DAYS = 8          # πόσες μέρες μπροστά δείχνει η σελίδα
 FALLBACK_DAYS = 21        # αν δεν υπάρχει αγώνας στις 8 μέρες, ψάχνει ως εδώ (π.χ. διακοπή εθνικών ομάδων)
 BACKFILL_DAYS = 330       # πόσο πίσω κοιτάει την πρώτη φορά (η πρώτη εκτέλεση κρατά ~20–30 λεπτά)
-HALF_LIFE = 150           # σε μέρες: ένας αγώνας πριν από 5 μήνες μετράει τα μισά
-RHO = -0.10               # διόρθωση Dixon–Coles
-FB_PRIOR = 4.0            # βάρος (σε αγώνες) της αφετηρίας κάθε ομάδας
+HALF_LIFE = 400           # σε μέρες: ένας αγώνας πριν από ~13 μήνες μετράει τα μισά (ρύθμιση: scripts/evaluate.py)
+RHO = -0.05               # διόρθωση Dixon–Coles
+FB_PRIOR = 8.0            # βάρος (σε αγώνες) της αφετηρίας κάθε ομάδας
 BB_PRIOR = 6.0
 
 GREEK_NAMES = {
@@ -173,7 +173,12 @@ def parse_events(board: dict, sport: str, slug: str) -> list[dict]:
             if not when:
                 continue
             season_type = (ev.get("season") or {}).get("type")
-            out.append(dict(
+            extra = {}
+            if sport == "soccer" and st.get("completed"):
+                sh, sa = shots_of(h), shots_of(a)
+                if sh and sa:
+                    extra = dict(hst=sh[0], ast=sa[0], hsh=sh[1], ash=sa[1])
+            out.append(dict(**extra,
                 id=f"{slug}:{ev['id']}", league=slug, when=when.isoformat(),
                 home=str(h["team"]["id"]), away=str(a["team"]["id"]),
                 hname=h["team"].get("displayName") or h["team"].get("name"),
@@ -188,6 +193,19 @@ def parse_events(board: dict, sport: str, slug: str) -> list[dict]:
         except (KeyError, IndexError, TypeError, ValueError):
             continue
     return out
+
+
+def shots_of(competitor: dict):
+    """(σουτ στην εστία, σουτ) από τα στατιστικά του ESPN, ή None αν λείπουν."""
+    v = {}
+    for x in competitor.get("statistics") or []:
+        try:
+            v[x.get("name")] = float(x.get("displayValue"))
+        except (TypeError, ValueError):
+            pass
+    if "shotsOnTarget" in v and "totalShots" in v and v["totalShots"] > 0:
+        return v["shotsOnTarget"], v["totalShots"]
+    return None
 
 
 def calendar_days(board: dict, cup: bool = False) -> set[str]:
@@ -235,6 +253,8 @@ def refresh_espn(cache: dict, sport: str, slug: str, show: bool = True) -> None:
     days = calendar_days(board, cup)
     if lc.get("calver") != 2:                            # νέος τρόπος ανάγνωσης ημερολογίου: ξαναδιάβασέ το
         lc["prevcal"], lc["calver"] = None, 2
+    if sport == "soccer" and lc.get("statver") != 1:     # μία φορά: ξανακατέβασε τις παλιές μέρες για τα σουτ
+        lc["final"], lc["statver"] = [], 1
     if lc["prevcal"] is None:                            # ημερολόγιο περσινής σεζόν, μία φορά
         try:
             lc["prevcal"] = sorted(calendar_days(espn_board(sport, slug, today - dt.timedelta(days=300)), cup))
@@ -317,8 +337,9 @@ def weight(when: str) -> float:
 
 
 # Επίπεδο κάθε πρωταθλήματος, από τον μέσο όρο βαθμολογίας Elo των ομάδων του (περίπου, όπως τον δίνουν
-# οι γνωστές κατατάξεις συλλόγων), με κλίμακα 0,0038 ανά βαθμό Elo. Την κλίμακα την επιβεβαιώνουν τα δεδομένα:
-# οι ομάδες που ανεβοκατεβαίνουν ανάμεσα σε Premier League και Championship δίνουν διαφορά ~0,8, όσο και ο πίνακας.
+# οι γνωστές κατατάξεις συλλόγων), με κλίμακα 0,0034 ανά βαθμό Elo. Την κλίμακα την επιβεβαιώνουν τα δεδομένα:
+# οι ομάδες που ανεβοκατεβαίνουν ανάμεσα σε Premier League και Championship δίνουν διαφορά ~0,7–0,8, όσο και
+# ο πίνακας, και ο αναδρομικός έλεγχος (scripts/evaluate.py) τη βγάζει ανάμεσα σε 0,003 και 0,0038.
 # Είναι μόνο η αφετηρία: όπου υπάρχουν ευρωπαϊκά παιχνίδια, τα αποτελέσματα τη διορθώνουν. Χωρίς αυτήν κάθε
 # πρωτάθλημα θα ήταν «νησί» και η πρώτη της Super League θα έβγαινε ισάξια με την πρώτη της Premier League.
 LEAGUE_ELO = {
@@ -329,16 +350,24 @@ LEAGUE_ELO = {
     "swe.1": 1430, "srb.1": 1400, "isr.1": 1400, "rou.1": 1400, "hun.1": 1400,
     "cyp.1": 1390, "svk.1": 1370, "bul.1": 1360, "svn.1": 1340,
 }
-ELO_SCALE = 0.0038
+ELO_SCALE = 0.0034
 LEAGUE_LEVEL = {k: round(ELO_SCALE * (v - 1720), 3) for k, v in LEAGUE_ELO.items()}
 DEFAULT_LEVEL = round(ELO_SCALE * (1400 - 1720), 3)   # ομάδα που τη βλέπουμε μόνο σε κύπελλο
-HOME_PRIOR = 60.0          # πόσο «τραβιέται» η έδρα κάθε διοργάνωσης προς τη συνολική (σε γκολ)
+TOT_PRIOR = 10.0           # επιπλέον «τράβηγμα» (σε αγώνες) για το πόσα γκολ βγαίνουν στα ματς μιας ομάδας
+MU_HALF = 30.0             # χρόνος ημιζωής (μέρες) για τον γενικό μέσο όρο γκολ (0 = ίδιος με τις ομάδες)
+SHOT_BETA = 0.0            # βάρος των σουτ στην εκτίμηση δύναμης (0 = μόνο γκολ)
+HOME_PRIOR = 200.0         # πόσο «τραβιέται» η έδρα κάθε διοργάνωσης προς τη συνολική (σε γκολ)
 
 
-def fit_football(games: list[dict], team_league: dict, weight_fn=None, iters: int = 120):
+def fit_football(games: list[dict], team_league: dict, weight_fn=None, iters: int = 120, shot_beta=None):
     """Dixon–Coles/Poisson με επίθεση και άμυνα ανά ομάδα, πλεονέκτημα έδρας ανά διοργάνωση και
-    αφετηρία ανά πρωτάθλημα. Όλες οι διοργανώσεις λύνονται μαζί."""
+    αφετηρία ανά πρωτάθλημα. Όλες οι διοργανώσεις λύνονται μαζί.
+
+    Με shot_beta > 0 η δύναμη μιας ομάδας βγαίνει από μείγμα γκολ και σουτ στην εστία: σε κάθε αγώνα
+    «μετράει» (1-β)·γκολ + β·k·σουτ_στην_εστία, όπου k = γκολ ανά σουτ στην εστία (≈0,3). Τα σουτ έχουν
+    λιγότερη τύχη από τα γκολ, οπότε δείχνουν πιο γρήγορα πόσο καλή είναι μια ομάδα."""
     weight_fn = weight_fn or weight
+    beta = SHOT_BETA if shot_beta is None else shot_beta
     teams = {g["home"] for g in games} | {g["away"] for g in games}
     lvl = {t: LEAGUE_LEVEL.get(team_league.get(t), DEFAULT_LEVEL) for t in teams}
     prior_a = {t: math.exp(lvl[t] / 2) for t in teams}
@@ -347,34 +376,77 @@ def fit_football(games: list[dict], team_league: dict, weight_fn=None, iters: in
     mu, hg = 1.3, 1.25
     home = {}
     W = [(g, weight_fn(g["when"])) for g in games]
+    k = shots_ratio(W) if beta > 0 else 0.0
+    W = [(g, w, *targets(g, beta, k)) for g, w in W]
+
+    def mean_goals(ws):
+        num = den = 0.0
+        for (g, _, yh, ya), w in zip(W, ws):
+            hf = 1.0 if g["neutral"] else home.get(g["league"], hg)
+            num += w * (yh + ya)
+            den += w * (hf * att[g["home"]] * dfn[g["away"]] + att[g["away"]] * dfn[g["home"]])
+        return num / den if den else mu
+
     for _ in range(iters):
         sg = defaultdict(float); se = defaultdict(float); cg = defaultdict(float); ce = defaultdict(float)
-        for g, w in W:
+        for g, w, yh, ya in W:
             h, a = g["home"], g["away"]
             hf = 1.0 if g["neutral"] else home.get(g["league"], hg)
             eh = mu * hf * att[h] * dfn[a]
             ea = mu * att[a] * dfn[h]
-            sg[h] += w * g["hs"]; se[h] += w * eh / att[h]
-            sg[a] += w * g["as_"]; se[a] += w * ea / att[a]
-            cg[a] += w * g["hs"]; ce[a] += w * eh / dfn[a]
-            cg[h] += w * g["as_"]; ce[h] += w * ea / dfn[h]
+            sg[h] += w * yh; se[h] += w * eh / att[h]
+            sg[a] += w * ya; se[a] += w * ea / att[a]
+            cg[a] += w * yh; ce[a] += w * eh / dfn[a]
+            cg[h] += w * ya; ce[h] += w * ea / dfn[h]
         for t in teams:
             att[t] = (sg[t] + FB_PRIOR * prior_a[t]) / (se[t] + FB_PRIOR)
             dfn[t] = (cg[t] + FB_PRIOR * prior_d[t]) / (ce[t] + FB_PRIOR)
         nh = defaultdict(float); dh = defaultdict(float)
-        for g, w in W:
+        for g, w, yh, ya in W:
             if not g["neutral"]:
-                nh[g["league"]] += w * g["hs"]; dh[g["league"]] += w * mu * att[g["home"]] * dfn[g["away"]]
+                nh[g["league"]] += w * yh; dh[g["league"]] += w * mu * att[g["home"]] * dfn[g["away"]]
         hg = sum(nh.values()) / sum(dh.values()) if dh else hg
         home = {L: (nh[L] + HOME_PRIOR * hg) / (dh[L] + HOME_PRIOR) for L in dh}
-        num = den = 0.0
-        for g, w in W:
-            hf = 1.0 if g["neutral"] else home.get(g["league"], hg)
-            num += w * (g["hs"] + g["as_"])
-            den += w * (hf * att[g["home"]] * dfn[g["away"]] + att[g["away"]] * dfn[g["home"]])
-        mu = num / den if den else mu
+        mu = mean_goals([x[1] for x in W])
+    if TOT_PRIOR > 0:
+        # Κάθε ομάδα έχει δύο «άξονες»: πόσο καλή είναι (επίθεση/άμυνα) και πόσα γκολ βγαίνουν στα ματς της
+        # (επίθεση×άμυνα). Ο δεύτερος είναι πολύ πιο θορυβώδης, οπότε τον τραβάμε πιο έντονα προς το μέσο.
+        n = defaultdict(float)
+        for g, w, _, _ in W:
+            n[g["home"]] += w; n[g["away"]] += w
+        for t in teams:
+            tt = 0.5 * math.log(att[t] * dfn[t] / (prior_a[t] * prior_d[t]))
+            f = math.exp(-tt * TOT_PRIOR / (n[t] + TOT_PRIOR))
+            att[t] *= f; dfn[t] *= f
+        mu = mean_goals([x[1] for x in W])
+    if MU_HALF > 0:
+        # Ο γενικός μέσος όρος γκολ αλλάζει μέσα στη σεζόν, οπότε τον μετράμε από τους πρόσφατους αγώνες.
+        mu = mean_goals([x[1] ** (HALF_LIFE / MU_HALF) for x in W])
     home["_all"] = hg
-    return mu, home, att, dfn
+    return dict(mu=mu, home=home, att=att, dfn=dfn, beta=beta, k=round(k, 4))
+
+
+def shots_ratio(W):
+    """Γκολ ανά σουτ στην εστία, στους αγώνες που έχουν στατιστικά."""
+    g_ = s_ = 0.0
+    for g, w in W:
+        if "hst" in g:
+            g_ += w * (g["hs"] + g["as_"]); s_ += w * (g["hst"] + g["ast"])
+    return g_ / s_ if s_ else 0.0
+
+
+def targets(g, beta, k):
+    if beta > 0 and k > 0 and "hst" in g:
+        return (1 - beta) * g["hs"] + beta * k * g["hst"], (1 - beta) * g["as_"] + beta * k * g["ast"]
+    return g["hs"], g["as_"]
+
+
+def fb_lambda(model, h, a, slug, neutral=False):
+    """Αναμενόμενα γκολ (γηπεδούχος, φιλοξενούμενος) από το μοντέλο του fit_football."""
+    d = (math.exp(DEFAULT_LEVEL / 2), math.exp(-DEFAULT_LEVEL / 2))
+    att, dfn = model["att"], model["dfn"]
+    hf = 1.0 if neutral else model["home"].get(slug, model["home"]["_all"])
+    return model["mu"] * hf * att.get(h, d[0]) * dfn.get(a, d[1]), model["mu"] * att.get(a, d[0]) * dfn.get(h, d[1])
 
 
 def fit_basketball(games: list[dict]):
@@ -618,7 +690,7 @@ def simulate(teams, season_games, lam, n=SIMS):
                     pb=round(bot3[i] / n, 4)) for t, i in ix.items()}, len(rem)
 
 
-def backtest(fb_games, team_league, shown, weeks=10):
+def backtest(fb_games, team_league, shown, weeks=10, shot_beta=None):
     """Αναδρομικός έλεγχος: για κάθε μία από τις τελευταίες εβδομάδες, το μοντέλο βλέπει μόνο τους
     προηγούμενους αγώνες και προβλέπει τους αγώνες της εβδομάδας."""
     items = []
@@ -630,18 +702,48 @@ def backtest(fb_games, team_league, shown, weeks=10):
         if len(train) < 500 or not test:
             continue
         wf = lambda w, ws=ws: 0.5 ** (max((ws - dt.datetime.fromisoformat(w)).total_seconds() / 86400, 0) / HALF_LIFE)
-        mu, home, att, dfn = fit_football(train, team_league, weight_fn=wf, iters=60)
-        d = (math.exp(DEFAULT_LEVEL / 2), math.exp(-DEFAULT_LEVEL / 2))
+        model = fit_football(train, team_league, weight_fn=wf, iters=60, shot_beta=shot_beta)
         for g in test:
-            hf = 1.0 if g["neutral"] else home.get(g["league"], home["_all"])
-            lh = mu * hf * att.get(g["home"], d[0]) * dfn.get(g["away"], d[1])
-            la = mu * att.get(g["away"], d[0]) * dfn.get(g["home"], d[1])
+            lh, la = fb_lambda(model, g["home"], g["away"], g["league"], g["neutral"])
             items.append(dict(kickoff=g["when"], league=league_label(g["league"]), sport="football",
                               hid=g["home"], aid=g["away"], p=fb_probs(lh, la), result=dict(home=g["hs"], away=g["as_"])))
     return items
 
 
+def logloss(items):
+    s = 0.0
+    for it in items:
+        r = it["result"]; p = it["p"]
+        q = p["H"] if r["home"] > r["away"] else p["D"] if r["home"] == r["away"] else p["A"]
+        s -= math.log(max(q, 1e-6))
+    return s / len(items) if items else None
+
+
+SHOT_CHOICES = (0.0, 0.25, 0.5)
+MODEL_VERSION = 2           # αλλάζει όταν αλλάζει το μοντέλο, ώστε να ξαναγίνει ο αναδρομικός έλεγχος
+
+
+def tune_shots(fb_games, team_league, shown, weeks=16):
+    """Μία φορά την εβδομάδα: δοκιμάζει πόσο να μετρούν τα σουτ στις τελευταίες εβδομάδες και κρατά
+    ό,τι πρόβλεψε καλύτερα (μικρότερο log-loss). Χωρίς αρκετά στατιστικά σουτ μένει στα γκολ."""
+    recent = [g for g in fb_games if g["when"] >= (NOW - dt.timedelta(days=200)).isoformat()]
+    cover = sum("hst" in g for g in recent) / len(recent) if recent else 0.0
+    out = dict(week=NOW.strftime("%G-W%V"), v=MODEL_VERSION, cover=round(cover, 3), beta=0.0, scores={})
+    if cover < 0.6:
+        return out
+    for b in SHOT_CHOICES:
+        items = backtest(fb_games, team_league, shown, weeks=weeks, shot_beta=b)
+        out["scores"][str(b)] = round(logloss(items), 4) if items else None
+    ok = {float(b): v for b, v in out["scores"].items() if v is not None}
+    if ok and 0.0 in ok:
+        best = min(ok, key=ok.get)
+        if ok[best] < ok[0.0] - 0.001:      # μόνο αν η διαφορά δεν είναι θόρυβος
+            out["beta"] = best
+    return out
+
+
 def main() -> int:
+    global SHOT_BETA
     SITE.mkdir(exist_ok=True); DATA.mkdir(exist_ok=True)
     cache_p, data_p, hist_p = DATA / "cache.json", SITE / "data.json", SITE / "history.json"
     tables_p = SITE / "tables.json"
@@ -699,12 +801,16 @@ def main() -> int:
 
     tables = []
     if fb_games:
-        mu, home, att, dfn = fit_football(fb_games, team_league)
-        print(f"• ποδόσφαιρο: {len(fb_games)} αγώνες στο μοντέλο, μ={mu:.2f}, έδρα×{home['_all']:.2f}")
-        dflt = (math.exp(DEFAULT_LEVEL / 2), math.exp(-DEFAULT_LEVEL / 2))
-        lam = lambda h, a, slug, neutral=False: (
-            mu * (1.0 if neutral else home.get(slug, home["_all"])) * att.get(h, dflt[0]) * dfn.get(a, dflt[1]),
-            mu * att.get(a, dflt[0]) * dfn.get(h, dflt[1]))
+        shown_slugs = {l["slug"] for l in FOOTBALL if l.get("show", True)}
+        tune = history.get("tune") or {}
+        if tune.get("week") != NOW.strftime("%G-W%V") or tune.get("v") != MODEL_VERSION:
+            print("• ρύθμιση βάρους σουτ…", flush=True)
+            tune = history["tune"] = tune_shots(fb_games, team_league, shown_slugs)
+            print(f"  κάλυψη {tune['cover']:.0%}, log-loss {tune['scores']} → β={tune['beta']}")
+        SHOT_BETA = float(tune.get("beta", 0.0))
+        model = fit_football(fb_games, team_league)
+        print(f"• ποδόσφαιρο: {len(fb_games)} αγώνες στο μοντέλο, μ={model['mu']:.2f}, έδρα×{model['home']['_all']:.2f}")
+        lam = lambda h, a, slug, neutral=False: fb_lambda(model, h, a, slug, neutral)
         fidx = by_team(fb_games)
         # βαθμολογίες και προσομοίωση
         pos = {}
@@ -734,14 +840,13 @@ def main() -> int:
             if sim:
                 note = (f"Από {SIMS:,} προσομοιώσεις των {left} αγώνων που απομένουν. ".replace(",", ".") + note).strip()
             tables.append(dict(name=lg["name"], cc=lg["cc"], sim=bool(sim), note=note, rows=rows))
-        shown_slugs = {l["slug"] for l in FOOTBALL if l.get("show", True)}
         week = NOW.strftime("%G-W%V")
-        if history.get("bt", {}).get("week") != week:
+        if history.get("bt", {}).get("week") != week or history["bt"].get("v") != MODEL_VERSION:
             print("• αναδρομικός έλεγχος…", flush=True)
             items = backtest(fb_games, team_league, shown_slugs)
             for it in items:
                 it["home"], it["away"] = fb_name(it.pop("hid")), fb_name(it.pop("aid"))
-            history["bt"] = dict(week=week, items=items)
+            history["bt"] = dict(week=week, v=MODEL_VERSION, items=items)
             print(f"  {len(items)} αγώνες")
         for lg in FOOTBALL:
             if not lg.get("show", True):
@@ -751,10 +856,7 @@ def main() -> int:
             if not ups:
                 continue
             for e in ups:
-                hf = 1.0 if e["neutral"] else home.get(lg["slug"], home["_all"])
-                ah, dh = att.get(e["home"], dflt[0]), dfn.get(e["home"], dflt[1])
-                aa, da = att.get(e["away"], dflt[0]), dfn.get(e["away"], dflt[1])
-                lh, la = round(mu * hf * ah * da, 3), round(mu * aa * dh, 3)
+                lh, la = (round(x, 3) for x in lam(e["home"], e["away"], lg["slug"], e["neutral"]))
                 m = dict(id=e["id"], sport="football", league=lg["name"], country=lg["cc"], kickoff=e["when"],
                          home=fb_name(e["home"]), away=fb_name(e["away"]), lambdaHome=lh, lambdaAway=la,
                          info=dict(form=[form_of(fidx, e["home"], fb_name), form_of(fidx, e["away"], fb_name)],
@@ -829,12 +931,13 @@ def main() -> int:
             s, k = f"{base_s}-{k}", k + 1
         seen.add(s); m["page"] = f"agones/{s}.html"
     data = dict(updated=NOW.isoformat(), matches=matches, leagues=meta, problems=problems,
-                elo=update_elo(old.get("elo")))
+                elo=update_elo(old.get("elo")), rho=RHO)
     data_p.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")))
     if tables:
         tables_p.write_text(json.dumps(dict(updated=NOW.isoformat(), leagues=tables), ensure_ascii=False, separators=(",", ":")))
     try:                                   # στατικές σελίδες: αν κάτι πάει στραβά, το κυρίως site δεν επηρεάζεται
         import static_pages
+        static_pages.RHO = RHO
         static_pages.build(SITE, matches, history, tables, NOW)
     except Exception as e:
         import traceback; traceback.print_exc()

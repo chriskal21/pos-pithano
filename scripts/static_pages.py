@@ -96,7 +96,7 @@ def base_url(site: pathlib.Path) -> str:
 
 
 # ------------------------------------------------------------------ πιθανότητες (ίδιες με τη σελίδα)
-RHO = -0.10
+RHO = -0.05   # το update.py βάζει εδώ την τιμή του μοντέλου
 
 
 def football_probs(lh: float, la: float) -> dict:
