@@ -425,6 +425,7 @@ footer .age { border-color: var(--muted); color: var(--muted); }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 </style>
+<script data-goatcounter="https://samuraibet.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </head>
 <body>
 <header class="top gut">
@@ -556,6 +557,7 @@ footer .age { border-color: var(--muted); color: var(--muted); }
       <p>Το SamurAI bet δείχνει στατιστικές εκτιμήσεις και δεν είναι συμβουλή στοιχηματισμού. Δεν συνεργάζεται με στοιχηματικές εταιρείες.</p>
       <p id="sources"></p>
       <p><a href="protathlimata/">Προγνωστικά ανά πρωτάθλημα</a></p>
+      <p>Μετράμε τις επισκέψεις με το <a href="https://www.goatcounter.com" rel="noopener">GoatCounter</a>, χωρίς cookies και χωρίς προσωπικά δεδομένα.</p>
     </div>
   </div>
 </footer>
@@ -1132,6 +1134,7 @@ footer .age { border-color: var(--muted); color: var(--muted); }
       e.append(el("h3", null, "Ο αγώνας δεν είναι πια στο πρόγραμμα"), el("p", null, "Μάλλον έχει ήδη παιχτεί. Το αποτέλεσμα και η πρόβλεψη υπάρχουν στο Ιστορικό."));
       v.append(e); window.scrollTo(0, 0); return;
     }
+    track("/" + (m.page || "#m/" + id), `${m.home} – ${m.away}`);
     const share = el("button", "btn"); share.type = "button";
     share.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13"/></svg>';
     share.append(document.createTextNode("Μοιράσου τον αγώνα"));
@@ -1187,6 +1190,9 @@ footer .age { border-color: var(--muted); color: var(--muted); }
   function closeMatch() {
     document.body.classList.remove("match-open"); $("#match-view").hidden = true; document.title = "SamurAI bet";
     requestAnimationFrame(() => window.scrollTo(0, lastScroll));
+  }
+  function track(path, title) {
+    try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path, title }); } catch (e) {}
   }
   function route() {
     const h = location.hash;
