@@ -254,7 +254,8 @@ def page(title, desc, canonical, body, root, og_image="", jsonld=None, links_htm
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Commissioner:wght@400;600;700&family=Fira+Sans+Extra+Condensed:ital,wght@0,600;0,700;1,800;1,900&display=swap">
 <link rel="stylesheet" href="{root}static.css">
-{ld}</head>
+{ld}<script data-goatcounter="https://samuraibet.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</head>
 <body>
 <header class="top gut"><div class="wrap">
 <a class="brand" href="{root}">{LOGO}<b>SamurAI<span>bet</span></b></a>
