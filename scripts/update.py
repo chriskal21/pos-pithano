@@ -42,7 +42,8 @@ NOW = (dt.datetime.fromisoformat(os.environ["NOW"].replace("Z", "+00:00"))
        if os.environ.get("NOW") else dt.datetime.now(dt.timezone.utc))
 UTC = dt.timezone.utc
 START = time.monotonic()
-FETCH_BUDGET = 75 * 60    # δευτερόλεπτα: μετά από τόσο, τα παλιά (ιστορικά) δεδομένα συνεχίζουν στην επόμενη εκτέλεση
+LIGHT = bool(os.environ.get("LIGHT"))   # ωριαία «ελαφριά» εκτέλεση: μόνο τα πρόσφατα, χωρίς ιστορικά και εβδομαδιαίους ελέγχους
+FETCH_BUDGET = 0 if LIGHT else 75 * 60   # δευτερόλεπτα: μετά από τόσο, τα παλιά (ιστορικά) δεδομένα συνεχίζουν στην επόμενη εκτέλεση
 
 # ------------------------------------------------------------------ τι εμφανίζεται
 # show=False: ο αγώνας χρησιμοποιείται μόνο για τις δυνάμεις (π.χ. ομάδες που παίζουν στα κύπελλα)
@@ -255,12 +256,12 @@ def refresh_espn(cache: dict, sport: str, slug: str, show: bool = True) -> None:
         lc["prevcal"], lc["calver"] = None, 2
     if sport == "soccer" and lc.get("statver") != 1:     # μία φορά: ξανακατέβασε τις παλιές μέρες για τα σουτ
         lc["final"], lc["statver"] = [], 1
-    if lc["prevcal"] is None:                            # ημερολόγιο περσινής σεζόν, μία φορά
+    if lc["prevcal"] is None and not LIGHT:              # ημερολόγιο περσινής σεζόν, μία φορά
         try:
             lc["prevcal"] = sorted(calendar_days(espn_board(sport, slug, today - dt.timedelta(days=300)), cup))
         except FetchError:
             lc["prevcal"] = []
-    days |= set(lc["prevcal"])
+    days |= set(lc["prevcal"] or [])
     if not days:                                          # χωρίς ημερολόγιο: κοίτα απλώς γύρω από σήμερα
         days = {(today + dt.timedelta(days=k)).isoformat() for k in range(-3, 11)}
 
@@ -803,7 +804,7 @@ def main() -> int:
     if fb_games:
         shown_slugs = {l["slug"] for l in FOOTBALL if l.get("show", True)}
         tune = history.get("tune") or {}
-        if tune.get("week") != NOW.strftime("%G-W%V") or tune.get("v") != MODEL_VERSION:
+        if not LIGHT and (tune.get("week") != NOW.strftime("%G-W%V") or tune.get("v") != MODEL_VERSION):
             print("• ρύθμιση βάρους σουτ…", flush=True)
             tune = history["tune"] = tune_shots(fb_games, team_league, shown_slugs)
             print(f"  κάλυψη {tune['cover']:.0%}, log-loss {tune['scores']} → β={tune['beta']}")
@@ -841,7 +842,7 @@ def main() -> int:
                 note = (f"Από {SIMS:,} προσομοιώσεις των {left} αγώνων που απομένουν. ".replace(",", ".") + note).strip()
             tables.append(dict(name=lg["name"], cc=lg["cc"], sim=bool(sim), note=note, rows=rows))
         week = NOW.strftime("%G-W%V")
-        if history.get("bt", {}).get("week") != week or history["bt"].get("v") != MODEL_VERSION:
+        if not LIGHT and (history.get("bt", {}).get("week") != week or history["bt"].get("v") != MODEL_VERSION):
             print("• αναδρομικός έλεγχος…", flush=True)
             items = backtest(fb_games, team_league, shown_slugs)
             for it in items:

@@ -249,8 +249,10 @@ def page(title, desc, canonical, body, root, og_image="", jsonld=None, links_htm
 <meta property="og:title" content="{E(title)}">
 <meta property="og:description" content="{E(desc)}">
 <meta name="twitter:card" content="summary_large_image">
-{og}<meta name="theme-color" content="#0A1714">
+{og}<meta name="theme-color" content="#06100D">
 <link rel="icon" href="{root}og-icon.svg" type="image/svg+xml">
+<link rel="manifest" href="{root}manifest.webmanifest">
+<link rel="apple-touch-icon" href="{root}icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Commissioner:wght@400;600;700&family=Fira+Sans+Extra+Condensed:ital,wght@0,600;0,700;1,800;1,900&display=swap">
 <link rel="stylesheet" href="{root}static.css">
