@@ -1,0 +1,19 @@
+{
+  "name": "SamurAI bet",
+  "short_name": "SamurAI bet",
+  "description": "Πιθανότητες και δίκαιες αποδόσεις για ποδόσφαιρο και μπάσκετ από στατιστικά μοντέλα.",
+  "lang": "el",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0A1714",
+  "theme_color": "#06100D",
+  "categories": ["sports"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

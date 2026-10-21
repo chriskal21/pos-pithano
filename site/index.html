@@ -5,7 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SamurAI bet</title>
 <meta name="description" content="SamurAI bet: πιθανότητες και δίκαιες αποδόσεις για ποδόσφαιρο και μπάσκετ από στατιστικά μοντέλα.">
-<meta name="theme-color" content="#0A1714">
+<meta name="theme-color" content="#06100D">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SamurAI bet">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="canonical" href="./">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="SamurAI bet">
@@ -421,10 +426,77 @@ footer .age { border-color: var(--muted); color: var(--muted); }
   .pick { grid-template-columns: minmax(0, 1fr); }
   .pick .vs { display: none; }
 }
+
+/* ---------- Selectable odds and the bet slip (παρολί) ---------- */
+button.odd, button.mk { font: inherit; color: inherit; text-align: inherit; cursor: pointer; width: 100%; margin: 0; }
+button.odd:hover, button.mk:hover { border-color: var(--amber); }
+.odd[aria-pressed="true"], .mk[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); box-shadow: none; }
+.odd[aria-pressed="true"] .k, .odd[aria-pressed="true"] .p, .odd[aria-pressed="true"] .v,
+.mk[aria-pressed="true"] span, .mk[aria-pressed="true"] small { color: var(--bg); }
+.hero .odd[aria-pressed="true"] { background: #F3F7F5; border-color: #F3F7F5; color: #0A1714; }
+.hero .odd[aria-pressed="true"] .k, .hero .odd[aria-pressed="true"] .p, .hero .odd[aria-pressed="true"] .v { color: #0A1714; }
+.slip { position: fixed; z-index: 20; right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  width: 380px; max-width: calc(100vw - 32px); background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.45); display: grid; overflow: hidden; }
+.slip-bar { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 10px; width: 100%;
+  border: 0; background: var(--hdr); color: #F3F7F5; padding: 11px 14px; cursor: pointer; text-align: left; }
+.slip-bar .n { display: grid; place-items: center; min-width: 26px; height: 26px; border-radius: 13px; background: #FFB627; color: #1A1200; font: 800 15px/1 var(--display); padding: 0 6px; }
+.slip-bar .t { font: italic 800 19px/1 var(--display); }
+.slip-bar .t small { display: block; font: 500 12px/1.3 var(--body); font-style: normal; color: #9DB3AA; margin-top: 2px; }
+.slip-bar .o { font: 800 22px/1 var(--display); font-variant-numeric: tabular-nums; color: #FFC756; }
+.slip-bar .t small.warn { color: #FFC756; }
+.slip-bar.pulse .n { animation: pulse .5s ease; }
+@keyframes pulse { 40% { transform: scale(1.35); } }
+.slip-bar svg { width: 18px; height: 18px; transition: transform .2s; }
+.slip-bar[aria-expanded="true"] svg { transform: rotate(180deg); }
+.slip-body { display: grid; gap: 12px; padding: 12px 14px 14px; max-height: min(66vh, 620px); overflow-y: auto; }
+.slip-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.slip-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 4px 10px; align-items: center; border: 1px solid var(--line);
+  background: var(--surface-2); border-radius: 10px; padding: 8px 6px 8px 10px; }
+.slip-row .m { grid-column: 1 / -1; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 30px; }
+.slip-row .pk { font: 700 16px/1.15 var(--display); min-width: 0; overflow-wrap: anywhere; }
+.slip-row .pp { font: 600 13px/1.2 var(--display); color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.slip-row .pp b { display: block; font: 800 18px/1 var(--display); color: var(--ink); }
+.slip-row .x { border: 0; background: none; cursor: pointer; color: var(--muted); width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; }
+.slip-row .x:hover { color: var(--neg); background: var(--surface); }
+.slip-row .x svg { width: 16px; height: 16px; }
+.slip-sum { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.slip-sum div { background: var(--surface-2); border-radius: 10px; padding: 8px 10px; display: grid; gap: 2px; }
+.slip-sum span { font-size: 12px; color: var(--muted); }
+.slip-sum b { font: 800 24px/1 var(--display); font-variant-numeric: tabular-nums; }
+.slip-sum b.amber { color: var(--amber-ink); }
+.slip p { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.45; }
+.slip p strong { color: var(--ink); font-weight: 600; }
+.slip label { display: grid; grid-template-columns: minmax(0, 1fr) 96px; gap: 4px 10px; align-items: center; font-size: 13.5px; }
+.slip input { border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 8px 10px; width: 100%; font: 700 17px/1 var(--display); text-align: right; }
+.slip .ev-val { grid-column: 1 / -1; text-align: right; font: 700 15px/1.2 var(--display); }
+.slip .ev-val.pos { color: var(--pos); } .slip .ev-val.neg { color: var(--neg); }
+.slip-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.slip-foot button { border: 1px solid var(--line); background: none; border-radius: 9px; padding: 7px 12px; cursor: pointer; font: 600 14px/1 var(--display); color: var(--muted); }
+.slip-foot button:hover { color: var(--ink); border-color: var(--muted); }
+.slip-msg { font-size: 12.5px; color: var(--amber-ink); min-height: 0; }
+body.has-slip footer { padding-bottom: 90px; }
+@media (max-width: 680px) {
+  .slip { left: 0; right: 0; bottom: 0; width: auto; max-width: none; border-radius: 16px 16px 0 0; border-bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .slip-body { max-height: 62vh; }
+}
+/* ---------- Install as app ---------- */
+.appbar { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 12px; margin-bottom: 16px;
+  background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--amber); border-radius: 12px; padding: 10px 10px 10px 12px; }
+.appbar img { border-radius: 8px; display: block; }
+.appbar p { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.35; }
+.appbar p b { display: block; color: var(--ink); font: 700 16px/1.2 var(--display); }
+.appbar-go { border: 0; background: var(--amber); color: var(--on-amber); border-radius: 9px; padding: 9px 14px; font: 700 15px/1 var(--display); cursor: pointer; }
+.appbar-x { border: 0; background: none; color: var(--muted); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: grid; place-items: center; }
+.appbar-x:hover { color: var(--ink); background: var(--surface-2); }
+.appbar-x svg { width: 16px; height: 16px; }
+@media (max-width: 680px) { .appbar { grid-template-columns: auto minmax(0, 1fr) auto; } .appbar-go { grid-column: 1 / -1; } }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 </style>
+<script>window.__bip = null; addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); window.__bip = e; dispatchEvent(new Event("bip")); });</script>
 <script data-goatcounter="https://samuraibet.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </head>
 <body>
@@ -452,6 +524,13 @@ footer .age { border-color: var(--muted); color: var(--muted); }
     <div class="subline">
       <p>Πιθανότητες από στατιστικά μοντέλα για ποδόσφαιρο και μπάσκετ, και οι δίκαιες αποδόσεις που τους αντιστοιχούν.</p>
       <p id="stamp">Φόρτωση δεδομένων…</p>
+    </div>
+
+    <div class="appbar" id="appbar" hidden>
+      <img src="icons/icon-192.png" alt="" width="36" height="36">
+      <p><b>Βάλε το SamurAI bet στην αρχική οθόνη</b><span id="appbar-txt">Ανοίγει σαν εφαρμογή, με ένα πάτημα.</span></p>
+      <button type="button" class="appbar-go" id="appbar-go" hidden>Εγκατάσταση</button>
+      <button type="button" class="appbar-x" id="appbar-x" aria-label="Κλείσιμο"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     </div>
 
     <section class="mview" id="match-view" hidden aria-live="polite"></section>
@@ -562,6 +641,7 @@ footer .age { border-color: var(--muted); color: var(--muted); }
     </div>
   </div>
 </footer>
+<aside class="slip" id="slip" aria-label="Δελτίο" hidden></aside>
 
 <script>
 (async function () {
@@ -727,6 +807,155 @@ footer .age { border-color: var(--muted); color: var(--muted); }
     return o.sort((a, b) => b[1] - a[1])[0];
   }
 
+
+  /* ---------- εγκατάσταση σαν εφαρμογή ---------- */
+  let installEvt = window.__bip;
+  window.addEventListener("bip", () => { installEvt = window.__bip; showAppbar(); });
+  window.addEventListener("appinstalled", () => { installEvt = null; $("#appbar").hidden = true; store.set("pp-app", "done"); });
+  const standalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  function showAppbar() {
+    if (standalone() || store.get("pp-app")) return;
+    const bar = $("#appbar"); if (!bar) return;
+    if (installEvt) { $("#appbar-go").hidden = false; $("#appbar-txt").textContent = "Ανοίγει σαν εφαρμογή, με ένα πάτημα."; }
+    else if (isIOS) { $("#appbar-go").hidden = true; $("#appbar-txt").textContent = "Στο Safari πάτα Κοινοποίηση (το τετράγωνο με το βέλος) και μετά «Προσθήκη στην οθόνη Αφετηρίας»."; }
+    else return;
+    bar.hidden = false;
+  }
+  function setupInstall() {
+    $("#appbar-x").addEventListener("click", () => { $("#appbar").hidden = true; store.set("pp-app", "no"); });
+    $("#appbar-go").addEventListener("click", async () => {
+      if (!installEvt) return;
+      installEvt.prompt();
+      try { const c = await installEvt.userChoice; if (c && c.outcome === "accepted") store.set("pp-app", "done"); } catch (e) {}
+      installEvt = null; $("#appbar").hidden = true;
+    });
+    showAppbar();
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
+
+  /* ---------- δελτίο (παρολί) ---------- */
+  const byId = new Map(matches.map(m => [m.id, m]));
+  const MARGIN = 0.065;                    // συνηθισμένο περιθώριο εταιρείας ανά σημείο (περίπου)
+  function marketP(m, label) {
+    const r = m.r;
+    const base = m.sport === "football"
+      ? { "1": r.H, "Χ": r.D, "2": r.A, "1Χ": r.H + r.D, "Χ2": r.D + r.A, "12": r.H + r.A, "Over 1,5": r.O15, "Over 2,5": r.O25,
+          "Under 2,5": 1 - r.O25, "Over 3,5": r.O35, "Γκολ-Γκολ": r.BT, "Όχι Γκολ-Γκολ": 1 - r.BT }
+      : { "1": r.H, "2": r.A };
+    if (label in base) return base[label];
+    const sc = /^Σκορ (\d+)-(\d+)$/.exec(label);
+    if (sc && r.M) return r.M[+sc[1]] ? r.M[+sc[1]][+sc[2]] : null;
+    return null;
+  }
+  const slip = {
+    items: [],
+    load() {
+      let raw = [];
+      try { raw = JSON.parse(store.get("pp-slip") || "[]"); } catch (e) {}
+      this.items = (Array.isArray(raw) ? raw : []).filter(x => x && x.id && byId.has(x.id) && byId.get(x.id).kt.getTime() > NOW)
+        .map(x => { const p = marketP(byId.get(x.id), x.k); return Object.assign(x, { p: p == null ? x.p : p }); });
+    },
+    save() { store.set("pp-slip", JSON.stringify(this.items)); },
+    has(id, k) { return this.items.some(x => x.id === id && x.k === k); },
+    toggle(m, k, p) {
+      let msg = "";
+      if (this.has(m.id, k)) this.items = this.items.filter(x => !(x.id === m.id && x.k === k));
+      else {
+        if (m.kt.getTime() <= Date.now()) { msg = "Ο αγώνας έχει ήδη αρχίσει."; }
+        else {
+          if (this.items.some(x => x.id === m.id)) msg = "Από κάθε αγώνα μπαίνει ένα σημείο: άλλαξα την επιλογή.";
+          this.items = this.items.filter(x => x.id !== m.id);
+          if (this.items.length >= 12) msg = "Το δελτίο χωράει ως 12 σημεία.";
+          else this.items.push({ id: m.id, k, p, sport: m.sport, home: m.home, away: m.away, league: m.league, kickoff: m.kickoff });
+        }
+      }
+      this.save(); this.render(msg); this.sync();
+      const bar = $("#slip .slip-bar");
+      if (bar && !this.open) { bar.classList.remove("pulse"); void bar.offsetWidth; bar.classList.add("pulse"); }
+      if (msg && !this.open) this.flash(msg);
+    },
+    sync() {
+      document.querySelectorAll("[data-sel]").forEach(b => {
+        const [id, k] = JSON.parse(b.dataset.sel);
+        b.setAttribute("aria-pressed", String(this.has(id, k)));
+      });
+    },
+    open: false,
+    flash(msg) {
+      const t = $("#slip .t small"); if (!t) return;
+      const keep = t.textContent; t.textContent = msg; t.classList.add("warn");
+      clearTimeout(this._ft); this._ft = setTimeout(() => { t.textContent = keep; t.classList.remove("warn"); }, 2600);
+    },
+    setOpen(v) { this.open = v; const b = $("#slip .slip-bar"), body = $("#slip .slip-body"); if (b) { b.setAttribute("aria-expanded", String(v)); body.hidden = !v; } },
+    pickName(x) { return x.k === "1" ? `${x.home} (1)` : x.k === "Χ" ? "Ισοπαλία (Χ)" : x.k === "2" ? `${x.away} (2)` : x.k; },
+    render(msg) {
+      const box = $("#slip"), n = this.items.length;
+      document.body.classList.toggle("has-slip", n > 0);
+      box.hidden = n === 0;
+      if (!n) { box.textContent = ""; this.open = false; return; }
+      const P = this.items.reduce((a, x) => a * x.p, 1);
+      box.textContent = "";
+      const bar = el("button", "slip-bar"); bar.type = "button"; bar.setAttribute("aria-controls", "slip-body");
+      const t = el("span", "t", n === 1 ? "Δελτίο" : "Παρολί");
+      t.append(el("small", null, `${n} ${n === 1 ? "σημείο" : "σημεία"} · πιθανότητα ${P >= 0.1 ? pct(P) : pct1(P)}`));
+      bar.append(el("span", "n", String(n)), t, el("span", "o", fair(P)));
+      bar.insertAdjacentHTML("beforeend", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg>');
+      bar.addEventListener("click", () => this.setOpen(!this.open));
+      const body = el("div", "slip-body"); body.id = "slip-body";
+      if (msg) body.append(el("p", "slip-msg", msg));
+      const ul = el("ul", "slip-list");
+      this.items.forEach(x => {
+        const li = el("li", "slip-row");
+        li.append(el("span", "m", `${x.home} – ${x.away} · ${whenShort(new Date(x.kickoff))}`));
+        li.append(el("span", "pk", this.pickName(x)));
+        const pp = el("span", "pp"); pp.append(el("b", null, fair(x.p)), document.createTextNode(pct(x.p))); li.append(pp);
+        const rm = el("button", "x"); rm.type = "button"; rm.setAttribute("aria-label", `Αφαίρεση: ${this.pickName(x)}`);
+        rm.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+        rm.addEventListener("click", () => { this.items = this.items.filter(y => y !== x); this.save(); this.render(); this.sync(); });
+        li.append(rm); ul.append(li);
+      });
+      body.append(ul);
+      const sum = el("div", "slip-sum");
+      const s1 = el("div"); s1.append(el("span", null, "Πιθανότητα να βγουν όλα"), el("b", null, P >= 0.1 ? pct(P) : pct1(P)));
+      const s2 = el("div"); s2.append(el("span", null, "Δίκαιη απόδοση"), el("b", "amber", fair(P)));
+      sum.append(s1, s2); body.append(sum);
+      const one = Math.max(1, Math.round(1 / P));
+      const typical = (1 / P) / Math.pow(1 + MARGIN, n);
+      const info = el("p");
+      info.innerHTML = n > 1
+        ? `Βγαίνει περίπου <strong>1 φορά στις ${one}</strong>. Οι εταιρείες κρατούν συνήθως 5–8% σε κάθε σημείο, και στο παρολί το περιθώριο πολλαπλασιάζεται: για ${n} σημεία θα δεις απόδοση γύρω στο <strong>${fair(1 / typical)}</strong>.`
+        : `Βγαίνει περίπου <strong>1 φορά στις ${one}</strong>. Πρόσθεσε σημεία από άλλους αγώνες για να φτιάξεις παρολί.`;
+      body.append(info);
+      const L = el("label"); L.htmlFor = "slip-odds"; L.append(document.createTextNode("Απόδοση του δελτίου στην εταιρεία"));
+      const inp = el("input"); inp.id = "slip-odds"; inp.inputMode = "decimal"; inp.autocomplete = "off"; inp.placeholder = fair(1 / typical);
+      const out = el("span", "ev-val");
+      inp.addEventListener("input", () => {
+        const o = parseFloat(inp.value.replace(",", "."));
+        if (!(o > 1)) { out.textContent = ""; out.className = "ev-val"; return; }
+        const e = P * o - 1;
+        out.textContent = (e >= 0 ? "Αξία +" : "Αξία −") + dec(Math.abs(e * 100)) + "%";
+        out.className = "ev-val " + (e >= 0 ? "pos" : "neg");
+      });
+      L.append(inp, out); body.append(L);
+      body.append(el("p", null, "Υποθέτει ότι οι αγώνες δεν επηρεάζουν ο ένας τον άλλον. Θετική αξία σημαίνει ότι η απόδοση είναι πάνω από τη δίκαιη του μοντέλου, όχι ότι θα κερδίσεις."));
+      const foot = el("div", "slip-foot");
+      const clr = el("button", null, "Καθάρισμα"); clr.type = "button";
+      clr.addEventListener("click", () => { this.items = []; this.save(); this.render(); this.sync(); });
+      const cls = el("button", null, "Κλείσιμο"); cls.type = "button"; cls.addEventListener("click", () => this.setOpen(false));
+      foot.append(clr, cls); body.append(foot);
+      box.append(bar, body);
+      this.setOpen(this.open);
+    }
+  };
+  slip.load();
+  function selectable(node, m, k, p) {
+    node.dataset.sel = JSON.stringify([m.id, k]);
+    node.setAttribute("aria-pressed", String(slip.has(m.id, k)));
+    node.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); slip.toggle(m, k, p); });
+    return node;
+  }
+
   /* ---------- shared bits ---------- */
   function pbar(r) {
     const b = el("div", "pbar"); b.setAttribute("role", "img");
@@ -739,16 +968,18 @@ footer .age { border-color: var(--muted); color: var(--muted); }
     const items = m.sport === "football" ? [["1", m.r.H], ["Χ", m.r.D], ["2", m.r.A]] : [["1", m.r.H], ["2", m.r.A]];
     const top = Math.max(...items.map(x => x[1]));
     items.forEach(([k, p]) => {
-      const o = el("div", "odd" + (p === top ? " best" : ""));
-      o.setAttribute("aria-label", `${k}: πιθανότητα ${pct(p)}, δίκαιη απόδοση ${fair(p)}`);
+      const o = el("button", "odd" + (p === top ? " best" : "")); o.type = "button";
+      o.setAttribute("aria-label", `${k}: πιθανότητα ${pct(p)}, δίκαιη απόδοση ${fair(p)}. Πρόσθεσε στο δελτίο`);
       o.append(el("span", "k", k), el("span", "v", fair(p)), el("span", "p", pct(p)));
+      selectable(o, m, k, p);
       wrap.append(o);
     });
     return wrap;
   }
-  function tile(label, p) {
-    const d = el("div", "mk");
+  function tile(label, p, m) {
+    const d = el(m ? "button" : "div", "mk");
     d.append(el("span", null, label), el("b", null, pct(p)), el("small", null, "δίκαιη " + fair(p)));
+    if (m) { d.type = "button"; d.title = "Πρόσθεσε στο δελτίο"; selectable(d, m, label, p); }
     return d;
   }
   function calc(m, items) {
@@ -796,10 +1027,10 @@ footer .age { border-color: var(--muted); color: var(--muted); }
     const right = el("div"); right.style.minWidth = "0";
     right.append(el("h4", null, "Αγορές"));
     const mk = el("div", "mkts");
-    mk.append(tile("1Χ", r.H + r.D), tile("Χ2", r.D + r.A), tile("12", r.H + r.A), tile("Over 1,5", r.O15),
-      tile("Over 2,5", r.O25), tile("Under 2,5", 1 - r.O25), tile("Over 3,5", r.O35), tile("Γκολ-Γκολ", r.BT),
-      tile("Όχι Γκολ-Γκολ", 1 - r.BT), tile(`Σκορ ${r.top[0][0]}-${r.top[0][1]}`, r.top[0][2]), tile(`Σκορ ${r.top[1][0]}-${r.top[1][1]}`, r.top[1][2]),
-      tile(`Σκορ ${r.top[2][0]}-${r.top[2][1]}`, r.top[2][2]));
+    mk.append(tile("1Χ", r.H + r.D, m), tile("Χ2", r.D + r.A, m), tile("12", r.H + r.A, m), tile("Over 1,5", r.O15, m),
+      tile("Over 2,5", r.O25, m), tile("Under 2,5", 1 - r.O25, m), tile("Over 3,5", r.O35, m), tile("Γκολ-Γκολ", r.BT, m),
+      tile("Όχι Γκολ-Γκολ", 1 - r.BT, m), tile(`Σκορ ${r.top[0][0]}-${r.top[0][1]}`, r.top[0][2], m), tile(`Σκορ ${r.top[1][0]}-${r.top[1][1]}`, r.top[1][2], m),
+      tile(`Σκορ ${r.top[2][0]}-${r.top[2][1]}`, r.top[2][2], m));
     right.append(mk, calc(m, [["1", r.H], ["Χ", r.D], ["2", r.A]]));
     d.append(left, right);
     return d;
@@ -1442,6 +1673,8 @@ footer .age { border-color: var(--muted); color: var(--muted); }
   renderSide();
   if (elo) initTennis();
   renderRecord();
+  slip.render();
+  setupInstall();
   const hash = (location.hash || "").slice(1), saved = store.get("pp-tab");
   showTab(TABS.includes(hash) ? hash : TABS.includes(saved) && !$("#tab-" + saved).hidden ? saved : "football");
   route();
